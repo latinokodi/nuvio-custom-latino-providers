@@ -55,7 +55,6 @@ async function searchAres(query) {
 async function extractStreams(url) {
     try {
         const html = await fetch(url, { headers: HEADERS }).then(r => r.text());
-        const streams = [];
         
         // AresHD uses a tabbed player system
         // Languages are in <li class="pres"><a class="playr">Latino</a></li>
@@ -71,6 +70,8 @@ async function extractStreams(url) {
         // Video blocks are in <ul class="TbVideoNv nav nav-tabs hide" role="tablist">
         const blockMatches = [...html.matchAll(/<ul class="TbVideoNv nav nav-tabs hide" role="tablist">(.*?)<\/ul>/gs)];
         
+        const streamPromises = [];
+
         blockMatches.forEach((block, index) => {
             const lang = languages[index] || "?";
             const serverMatches = [...block[1].matchAll(/<li class="pres" data-tr="([^"]+)".*?a class="playr">([^<]+)<\/a>/g)];
@@ -81,16 +82,44 @@ async function extractStreams(url) {
                 
                 if (serverName.toLowerCase().includes("youtube")) return;
 
-                streams.push({
-                    name: "AresHD",
-                    title: `${serverName} (${lang})`,
-                    url: streamUrl,
-                    quality: "HD",
-                    headers: { Referer: url }
-                });
+                const resolvePromise = (async () => {
+                    try {
+                        const playerRes = await fetch(streamUrl, {
+                            headers: {
+                                ...HEADERS,
+                                "Referer": url
+                            }
+                        });
+                        const playerHtml = await playerRes.text();
+                        const urlMatch = playerHtml.match(/var\s+url\s*=\s*'([^']+)'/i) || playerHtml.match(/var\s+url\s*=\s*"([^"]+)"/i);
+                        if (urlMatch) {
+                            return {
+                                name: "AresHD",
+                                title: `${serverName} (${lang})`,
+                                url: urlMatch[1],
+                                quality: "HD",
+                                headers: { Referer: streamUrl }
+                            };
+                        }
+                    } catch (e) {
+                        console.log(`[AresHD] Failed to resolve player URL ${streamUrl}: ${e.message}`);
+                    }
+                    
+                    // Fallback to original URL
+                    return {
+                        name: "AresHD",
+                        title: `${serverName} (${lang})`,
+                        url: streamUrl,
+                        quality: "HD",
+                        headers: { Referer: url }
+                    };
+                })();
+
+                streamPromises.push(resolvePromise);
             });
         });
 
+        const streams = await Promise.all(streamPromises);
         return streams;
     } catch (e) {
         console.log(`[AresHD] Extract Error: ${e.message}`);
