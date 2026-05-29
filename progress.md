@@ -4,6 +4,8 @@ This file tracks the status of porting and copying providers for the Nuvio Strea
 
 ## 1. Repository Status
 * **Location**: `F:\PyApps\luviotests\new-providers`
+* **GitHub Repository**: [nuvio-custom-latino-providers](https://github.com/latinokodi/nuvio-custom-latino-providers)
+* **Manifest URL**: `https://raw.githubusercontent.com/latinokodi/nuvio-custom-latino-providers/main/manifest.json`
 * **Structure Created**:
   * `providers/`: Directory containing CommonJS JavaScript scrapers.
   * `tests/`: Directory containing the test runner and verification tools.
