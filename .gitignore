@@ -1,7 +1,8 @@
 # Ignore everything by default
 /*
 
-# Whitelist manifest.json, the providers directory, and .gitignore
+# Whitelist manifest.json, README.md, the providers directory, and .gitignore
 !.gitignore
 !manifest.json
+!README.md
 !providers/
