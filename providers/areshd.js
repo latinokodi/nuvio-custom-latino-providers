@@ -598,18 +598,37 @@ async function resolveEmbed(embedUrl) {
 
 // ─── AresHD scraping ──────────────────────────────────────────────────────────
 
+function cleanTitle(title) {
+    if (!title) return "";
+    return title
+        .toLowerCase()
+        .replace(/\(.*?\)/g, "")
+        .replace(/\[.*?\]/g, "")
+        .replace(/:\s*.*?$/g, "")
+        .replace(/[-_]/g, " ")
+        .replace(/[^a-zA-Z0-9\sáéíóúÁÉÍÓÚñÑ]/g, "")
+        .replace(/\s+/g, " ")
+        .trim();
+}
+
 async function getTMDBInfo(id, type) {
-    try {
-        const url = `https://api.themoviedb.org/3/${type}/${id}?api_key=${TMDB_API_KEY}&language=es-MX`;
-        const res = await fetch(url, { headers: HEADERS }).then(r => r.json());
-        return {
-            title: type === "movie" ? res.title : res.name,
-            year: (res.release_date || res.first_air_date || "").substring(0, 4)
-        };
-    } catch (e) {
-        console.log(`[AresHD] TMDB Error: ${e.message}`);
-        return null;
+    const titles = new Set();
+    let year = "";
+    const languages = ["es-MX", "es-ES", "en-US"];
+    for (const lang of languages) {
+        try {
+            const url = `https://api.themoviedb.org/3/${type}/${id}?api_key=${TMDB_API_KEY}&language=${lang}`;
+            const res = await fetch(url, { headers: HEADERS }).then(r => r.json());
+            const title = type === "movie" ? res.title : res.name;
+            const original = type === "movie" ? res.original_title : res.original_name;
+            if (title) titles.add(title);
+            if (original) titles.add(original);
+            if (!year) year = (res.release_date || res.first_air_date || "").substring(0, 4);
+        } catch (e) {
+            console.log(`[AresHD] TMDB Error (${lang}): ${e.message}`);
+        }
     }
+    return titles.size > 0 ? { titles: Array.from(titles), year } : null;
 }
 
 async function searchAres(query) {
@@ -715,11 +734,29 @@ async function getStreams(id, type, season, episode) {
     const info = await getTMDBInfo(id, type);
     if (!info) return [];
 
-    const results = await searchAres(info.title);
-    if (results.length === 0) return [];
+    let matchedPost = null;
+    for (const title of info.titles) {
+        const results = await searchAres(title);
+        if (results && results.length > 0) {
+            // Find post with closest title match
+            matchedPost = results.find(r => {
+                const rt = cleanTitle(r.title);
+                return info.titles.some(t => {
+                    const ct = cleanTitle(t);
+                    return rt.includes(ct) || ct.includes(rt);
+                });
+            });
+            if (matchedPost) break;
+        }
+    }
 
-    const target = results[0];
-    let url = target.url;
+    if (!matchedPost) {
+        console.log("[AresHD] No matching post found.");
+        return [];
+    }
+
+    console.log(`[AresHD] Matched: "${matchedPost.title}" -> ${matchedPost.url}`);
+    let url = matchedPost.url;
 
     if (type === "tv") {
         const name = url.match(/\/serie\/([^/]+)/)?.[1];
