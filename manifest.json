@@ -43,22 +43,6 @@
       "supportsExternalPlayer": true
     },
     {
-      "id": "detodopeliculas",
-      "name": "Detodopeliculas",
-      "description": "Streams en Latino desde Detodopeliculas.",
-      "version": "1.0.0",
-      "author": "latinokodi",
-      "supportedTypes": [
-        "movie",
-        "tv"
-      ],
-      "filename": "providers/detodopeliculas.js",
-      "enabled": true,
-      "contentLanguage": [
-        "es"
-      ]
-    },
-    {
       "id": "gnula",
       "name": "Gnula",
       "description": "Películas, series y anime en Latino/Español desde Gnula.hd.",
@@ -173,6 +157,106 @@
         "es"
       ],
       "logo": "https://verpelis.gratis/favicon.ico"
+    },
+    {
+      "id": "cuevanaubd",
+      "name": "Cuevana UBD",
+      "description": "Proveedor rapido JSON nativo de Cuevana.",
+      "version": "1.2.0",
+      "author": "latinokodi",
+      "supportedTypes": [
+        "movie",
+        "tv"
+      ],
+      "filename": "providers/cuevana.js",
+      "enabled": true,
+      "logo": "https://i.postimg.cc/4dJGhTmW/Gemini-Generated-Image-w81fzfw81fzfw81f.png",
+      "contentLanguage": [
+        "es"
+      ],
+      "formats": [
+        "m3u8",
+        "mp4"
+      ],
+      "limited": false,
+      "supportsExternalPlayer": true
+    },
+    {
+      "id": "repelishd",
+      "name": "RepelisHD",
+      "description": "Películas y series desde RepelisHD.",
+      "version": "1.0.0",
+      "author": "latinokodi",
+      "supportedTypes": [
+        "movie",
+        "tv"
+      ],
+      "filename": "providers/repelishd.js",
+      "enabled": true,
+      "contentLanguage": [
+        "es"
+      ]
+    },
+    {
+      "id": "veronline",
+      "name": "VerOnline",
+      "description": "Series en Latino, Español y VOSE desde VerOnline.",
+      "version": "1.0.0",
+      "author": "latinokodi",
+      "supportedTypes": [
+        "tv"
+      ],
+      "filename": "providers/veronline.js",
+      "enabled": true,
+      "contentLanguage": [
+        "es"
+      ]
+    },
+    {
+      "id": "allpeliculasse",
+      "name": "AllpeliculasSE",
+      "description": "Películas y series en Latino, Castellano y VOSE desde Allpeliculas.",
+      "version": "1.0.0",
+      "author": "balandro-ported",
+      "supportedTypes": [
+        "movie",
+        "tv"
+      ],
+      "filename": "providers/allpeliculasse.js",
+      "enabled": true,
+      "contentLanguage": [
+        "es"
+      ],
+      "logo": "https://allpeliculas.la/favicon.ico"
+    },
+    {
+      "id": "elifilms",
+      "name": "EliFilms",
+      "description": "Películas y series en Latino, Castellano y VOSE desde AllCalidad.re (EliFilms).",
+      "version": "1.0.0",
+      "author": "balandro-ported",
+      "supportedTypes": [
+        "movie",
+        "tv"
+      ],
+      "filename": "providers/elifilms.js",
+      "enabled": true,
+      "contentLanguage": [
+        "es"
+      ],
+      "logo": "https://allcalidad.re/favicon.ico"
+    },
+    {
+      "id": "entrepeliculasyseries",
+      "name": "EntrePeliculasySeries",
+      "description": "Películas y series en Latino, Castellano y VOSE desde EntrePeliculasySeries.nz.",
+      "version": "1.0.0",
+      "author": "balandro-ported",
+      "supportedTypes": ["movie", "tv"],
+      "filename": "providers/entrepeliculasyseries.js",
+      "enabled": true,
+      "contentLanguage": ["es"],
+      "logo": "https://entrepeliculasyseries.nz/favicon.ico"
     }
   ]
 }
