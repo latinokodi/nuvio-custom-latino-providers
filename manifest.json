@@ -257,6 +257,18 @@
       "enabled": true,
       "contentLanguage": ["es"],
       "logo": "https://entrepeliculasyseries.nz/favicon.ico"
+    },
+    {
+      "id": "megadedeoficial",
+      "name": "MegaDedeOficial",
+      "description": "Películas y series en Latino, Castellano y VOSE desde MegaDede.mobi.",
+      "version": "1.0.0",
+      "author": "balandro-ported",
+      "supportedTypes": ["movie", "tv"],
+      "filename": "providers/megadedeoficial.js",
+      "enabled": true,
+      "contentLanguage": ["es"],
+      "logo": "https://megadede.mobi/favicon.ico"
     }
   ]
 }
