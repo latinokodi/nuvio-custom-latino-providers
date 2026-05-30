@@ -269,6 +269,18 @@
       "enabled": true,
       "contentLanguage": ["es"],
       "logo": "https://megadede.mobi/favicon.ico"
+    },
+    {
+      "id": "peliculasflix",
+      "name": "PeliculasFlix",
+      "description": "Películas en Latino, Castellano y VOSE desde PeliculasFlix.co.",
+      "version": "1.0.0",
+      "author": "balandro-ported",
+      "supportedTypes": ["movie"],
+      "filename": "providers/peliculasflix.js",
+      "enabled": true,
+      "contentLanguage": ["es"],
+      "logo": "https://peliculasflix.co/favicon.ico"
     }
   ]
 }

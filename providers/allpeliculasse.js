@@ -289,7 +289,13 @@ async function resolveFilemoon(embedUrl) {
     try {
         const urlObj = new URL(embedUrl);
         const hostname = urlObj.hostname;
-        const videoId = urlObj.pathname.split("/").filter(Boolean).pop();
+        const pathParts = urlObj.pathname.split("/").filter(Boolean);
+        let videoId = null;
+        if (pathParts[0] === "e" || pathParts[0] === "d") {
+            videoId = pathParts[1];
+        } else {
+            videoId = pathParts.pop();
+        }
         if (!videoId) return null;
         const detailsRes = await fetch(`https://${hostname}/api/videos/${videoId}/embed/details`, {
             headers: { "X-Requested-With": "XMLHttpRequest", "Referer": embedUrl, "User-Agent": USER_AGENT }

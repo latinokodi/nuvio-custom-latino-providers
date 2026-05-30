@@ -281,7 +281,13 @@ async function resolveFilemoon(embedUrl) {
     try {
         const urlObj = new URL(embedUrl);
         const hostname = urlObj.hostname;
-        const videoId = urlObj.pathname.split("/").filter(Boolean).pop();
+        const pathParts = urlObj.pathname.split("/").filter(Boolean);
+        let videoId = null;
+        if (pathParts[0] === "e" || pathParts[0] === "d") {
+            videoId = pathParts[1];
+        } else {
+            videoId = pathParts.pop();
+        }
         if (!videoId) return null;
 
         console.log(`[AresHD:FileMoon] ECDSA-resolving: ${videoId} @ ${hostname}`);
