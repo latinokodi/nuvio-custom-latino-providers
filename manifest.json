@@ -8,10 +8,15 @@
       "description": "Películas y series en HD con múltiples idiomas desde AresHD.com.",
       "version": "1.1.0",
       "author": "latinokodi",
-      "supportedTypes": ["movie", "tv"],
+      "supportedTypes": [
+        "movie",
+        "tv"
+      ],
       "filename": "providers/areshd.js",
       "enabled": true,
-      "contentLanguage": ["es"],
+      "contentLanguage": [
+        "es"
+      ],
       "logo": "https://areshd.com/favicon.ico"
     },
     {
@@ -20,12 +25,20 @@
       "description": "Películas y series en español latino directo desde cinemitas.org.",
       "version": "1.0.0",
       "author": "latinokodi",
-      "supportedTypes": ["movie", "tv"],
+      "supportedTypes": [
+        "movie",
+        "tv"
+      ],
       "filename": "providers/cinemitas.js",
       "enabled": true,
       "logo": "https://cinemitas.org/wp-content/uploads/2025/01/favicon-cinemitas.png",
-      "contentLanguage": ["es"],
-      "formats": ["m3u8", "mp4"],
+      "contentLanguage": [
+        "es"
+      ],
+      "formats": [
+        "m3u8",
+        "mp4"
+      ],
       "limited": false,
       "supportsExternalPlayer": true
     },
@@ -35,10 +48,15 @@
       "description": "Streams en Latino desde Detodopeliculas.",
       "version": "1.0.0",
       "author": "latinokodi",
-      "supportedTypes": ["movie", "tv"],
+      "supportedTypes": [
+        "movie",
+        "tv"
+      ],
       "filename": "providers/detodopeliculas.js",
       "enabled": true,
-      "contentLanguage": ["es"]
+      "contentLanguage": [
+        "es"
+      ]
     },
     {
       "id": "gnula",
@@ -46,10 +64,15 @@
       "description": "Películas, series y anime en Latino/Español desde Gnula.hd.",
       "version": "1.0.0",
       "author": "latinokodi",
-      "supportedTypes": ["movie", "tv"],
+      "supportedTypes": [
+        "movie",
+        "tv"
+      ],
       "filename": "providers/gnula.js",
       "enabled": true,
-      "contentLanguage": ["es"]
+      "contentLanguage": [
+        "es"
+      ]
     },
     {
       "id": "seriesflix",
@@ -57,10 +80,14 @@
       "description": "Streams en Latino desde Seriesflix.",
       "version": "1.0.0",
       "author": "latinokodi",
-      "supportedTypes": ["tv"],
+      "supportedTypes": [
+        "tv"
+      ],
       "filename": "providers/seriesflix.js",
       "enabled": true,
-      "contentLanguage": ["es"]
+      "contentLanguage": [
+        "es"
+      ]
     },
     {
       "id": "seriesgato",
@@ -68,10 +95,14 @@
       "description": "Una de las fuentes más actualizadas para series con audio dual (Latino/Inglés) desde Gatonplayseries.",
       "version": "1.0.0",
       "author": "latinokodi",
-      "supportedTypes": ["tv"],
+      "supportedTypes": [
+        "tv"
+      ],
       "filename": "providers/seriesgato.js",
       "enabled": true,
-      "contentLanguage": ["es"]
+      "contentLanguage": [
+        "es"
+      ]
     },
     {
       "id": "seriespapaya",
@@ -79,21 +110,14 @@
       "description": "Gran catálogo de series, incluyendo contenido clásico y estrenos desde Magistv24.",
       "version": "1.0.0",
       "author": "latinokodi",
-      "supportedTypes": ["tv"],
+      "supportedTypes": [
+        "tv"
+      ],
       "filename": "providers/seriespapaya.js",
       "enabled": true,
-      "contentLanguage": ["es"]
-    },
-    {
-      "id": "seriesretro",
-      "name": "SeriesRetro",
-      "description": "Especializado en series clásicas, animación de los 80s/90s y series vintage.",
-      "version": "1.0.0",
-      "author": "latinokodi",
-      "supportedTypes": ["tv"],
-      "filename": "providers/seriesretro.js",
-      "enabled": true,
-      "contentLanguage": ["es"]
+      "contentLanguage": [
+        "es"
+      ]
     },
     {
       "id": "vitaminagg",
@@ -101,11 +125,18 @@
       "description": "Películas y series animadas en español latino desde vitaminagg.vip.",
       "version": "1.0.0",
       "author": "latinokodi",
-      "supportedTypes": ["movie", "tv"],
+      "supportedTypes": [
+        "movie",
+        "tv"
+      ],
       "filename": "providers/vitaminagg.js",
       "enabled": true,
-      "contentLanguage": ["es"],
-      "formats": ["m3u8"],
+      "contentLanguage": [
+        "es"
+      ],
+      "formats": [
+        "m3u8"
+      ],
       "limited": false,
       "supportsExternalPlayer": true
     },
@@ -115,107 +146,16 @@
       "description": "Películas y series en HD con audio Latino desde Zona-Leros.com.",
       "version": "1.0.0",
       "author": "latinokodi",
-      "supportedTypes": ["movie", "tv"],
+      "supportedTypes": [
+        "movie",
+        "tv"
+      ],
       "filename": "providers/zonaleros.js",
       "enabled": true,
-      "contentLanguage": ["es"],
+      "contentLanguage": [
+        "es"
+      ],
       "logo": "https://zona-leros.com/favicon.ico"
-    },
-    {
-      "id": "ciberdocumentales",
-      "name": "CiberDocumentales",
-      "description": "Documentales en español castellano desde ciberdocumentales.com.",
-      "version": "1.0.0",
-      "author": "balandro-ported",
-      "supportedTypes": ["movie", "tv"],
-      "filename": "providers/ciberdocumentales.js",
-      "enabled": true,
-      "contentLanguage": ["es"],
-      "logo": "https://www.ciberdocumentales.com/favicon.ico"
-    },
-    {
-      "id": "cinehindi",
-      "name": "CineHindi",
-      "description": "Películas de la India y otros géneros dobladas al español o subbed.",
-      "version": "1.0.0",
-      "author": "balandro-ported",
-      "supportedTypes": ["movie"],
-      "filename": "providers/cinehindi.js",
-      "enabled": true,
-      "contentLanguage": ["es"],
-      "logo": "https://cinehindi.com/favicon.ico"
-    },
-    {
-      "id": "creyente",
-      "name": "Creyente",
-      "description": "Películas y series bíblicas y familiares de creyente.digital.",
-      "version": "1.0.0",
-      "author": "balandro-ported",
-      "supportedTypes": ["movie", "tv"],
-      "filename": "providers/creyente.js",
-      "enabled": true,
-      "contentLanguage": ["es"],
-      "logo": "https://creyente.digital/favicon.ico"
-    },
-    {
-      "id": "documentaleson",
-      "name": "DocumentalesOn",
-      "description": "Gran colección de documentales clasificados en español de documentaleson.com.",
-      "version": "1.0.0",
-      "author": "balandro-ported",
-      "supportedTypes": ["movie"],
-      "filename": "providers/documentaleson.js",
-      "enabled": true,
-      "contentLanguage": ["es"],
-      "logo": "https://documentaleson.com/favicon.ico"
-    },
-    {
-      "id": "documentalesonline",
-      "name": "DocumentalesOnline",
-      "description": "Catálogo amplio de documentales y series de temas reales en español.",
-      "version": "1.0.0",
-      "author": "balandro-ported",
-      "supportedTypes": ["movie"],
-      "filename": "providers/documentalesonline.js",
-      "enabled": true,
-      "contentLanguage": ["es"],
-      "logo": "https://www.documentales-online.com/favicon.ico"
-    },
-    {
-      "id": "mundodesconocido",
-      "name": "MundoDesconocido",
-      "description": "Videoprogramas de misterios, ciencia y reflexiones del blog de mundodesconocido.es.",
-      "version": "1.0.0",
-      "author": "balandro-ported",
-      "supportedTypes": ["movie"],
-      "filename": "providers/mundodesconocido.js",
-      "enabled": true,
-      "contentLanguage": ["es"],
-      "logo": "https://www.mundodesconocido.es/favicon.ico"
-    },
-    {
-      "id": "retrocinema",
-      "name": "RetroCinema",
-      "description": "Películas clásicas del cine de oro desde online.historiadelcine.es.",
-      "version": "1.0.0",
-      "author": "balandro-ported",
-      "supportedTypes": ["movie"],
-      "filename": "providers/retrocinema.js",
-      "enabled": true,
-      "contentLanguage": ["es"],
-      "logo": "https://online.historiadelcine.es/favicon.ico"
-    },
-    {
-      "id": "todocineclasico",
-      "name": "TodoCineClasico",
-      "description": "Colecciones y cine clásico selecto desde leyendasdelcine.com.",
-      "version": "1.0.0",
-      "author": "balandro-ported",
-      "supportedTypes": ["movie"],
-      "filename": "providers/todocineclasico.js",
-      "enabled": true,
-      "contentLanguage": ["es"],
-      "logo": "https://leyendasdelcine.com/favicon.ico"
     },
     {
       "id": "verpelis",
@@ -223,23 +163,16 @@
       "description": "Películas y series actuales en español latino e inglés de verpelis.gratis.",
       "version": "1.0.0",
       "author": "balandro-ported",
-      "supportedTypes": ["movie", "tv"],
+      "supportedTypes": [
+        "movie",
+        "tv"
+      ],
       "filename": "providers/verpelis.js",
       "enabled": true,
-      "contentLanguage": ["es"],
+      "contentLanguage": [
+        "es"
+      ],
       "logo": "https://verpelis.gratis/favicon.ico"
-    },
-    {
-      "id": "retrotv",
-      "name": "RetroTV",
-      "description": "Series retro de los 70s, 80s, 90s y películas clásicas desde retrotv.co.",
-      "version": "1.0.0",
-      "author": "balandro-ported",
-      "supportedTypes": ["movie", "tv"],
-      "filename": "providers/retrotv.js",
-      "enabled": true,
-      "contentLanguage": ["es"],
-      "logo": "https://retrotv.co/favicon.ico"
     }
   ]
 }
