@@ -30,8 +30,7 @@ function cleanTitle(title) {
         .toLowerCase()
         .replace(/\(.*?\)/g, "")
         .replace(/\[.*?\]/g, "")
-        .replace(/:\s*.*?$/g, "")
-        .replace(/[-_]/g, " ")
+        .replace(/[-_:]/g, " ")
         .replace(/[^a-zA-Z0-9\sáéíóúÁÉÍÓÚñÑ]/g, "")
         .replace(/\s+/g, " ")
         .trim();
@@ -629,17 +628,36 @@ async function getStreams(id, type, season, episode) {
         const cleaned = cleanTitle(title);
         const posts = await searchEliFilms(query, type);
         if (posts && posts.length > 0) {
-            // Prefer exact cleaned-title match
+            // Find a post matching the title and year
             matchedPost = posts.find(p => {
                 const pt = cleanTitle(p.title);
                 const po = cleanTitle(p.originalTitle || "");
-                return pt.includes(cleaned) || cleaned.includes(pt) ||
-                       (po && (po.includes(cleaned) || cleaned.includes(po)));
+                const titleMatch = pt.includes(cleaned) || cleaned.includes(pt) ||
+                                   (po && (po.includes(cleaned) || cleaned.includes(po)));
+                
+                let yearMatch = true;
+                if (info.year) {
+                    const postYearMatch = p.title.match(/\((\d{4})\)/);
+                    if (postYearMatch) {
+                        const postYear = parseInt(postYearMatch[1], 10);
+                        const tmdbYear = parseInt(info.year, 10);
+                        yearMatch = Math.abs(postYear - tmdbYear) <= 1;
+                    }
+                }
+                return titleMatch && yearMatch;
             });
             if (matchedPost) break;
-            // Fallback: first result (site already filtered by post_type)
-            matchedPost = posts[0];
-            break;
+            
+            // Fallback to first result only if we have a loose title match
+            const fallbackPost = posts[0];
+            const pt = cleanTitle(fallbackPost.title);
+            const po = cleanTitle(fallbackPost.originalTitle || "");
+            const fallbackTitleMatch = pt.includes(cleaned) || cleaned.includes(pt) ||
+                                       (po && (po.includes(cleaned) || cleaned.includes(po)));
+            if (fallbackTitleMatch) {
+                matchedPost = fallbackPost;
+                break;
+            }
         }
     }
 
