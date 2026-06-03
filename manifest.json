@@ -281,6 +281,17 @@
       "enabled": true,
       "contentLanguage": ["es"],
       "logo": "https://peliculasflix.co/favicon.ico"
+    },
+    {
+      "id": "pelis182",
+      "name": "Pelis182",
+      "description": "Gran catálogo de películas y series en Latino/Español desde Pelis182.net.",
+      "version": "1.0.0",
+      "author": "latinokodi",
+      "supportedTypes": ["movie", "tv"],
+      "filename": "providers/pelis182.js",
+      "enabled": true,
+      "contentLanguage": ["es"]
     }
   ]
 }
