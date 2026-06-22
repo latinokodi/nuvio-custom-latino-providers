@@ -1,34 +1,94 @@
 const cheerio = require("cheerio");
+const crypto = require("crypto");
 
 const TMDB_KEY = "439c478a771f35c05022f9feabcca01c";
 const BASE_URL = "https://retrotve.com";
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
 
+// Base64url decode helper for FileMoon decryption
+function b64urlDecode(s) {
+    s = s.replace(/-/g, '+').replace(/_/g, '/');
+    while (s.length % 4) s += '=';
+    return Buffer.from(s, 'base64');
+}
+
 const HEADERS = {
     "User-Agent": UA,
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
-    "Accept-Language": "es-ES,es;q=0.9,en;q=0.8",
-    "Connection": "close"
+    "Accept-Language": "es-ES,es;q=0.9,en;q=0.8"
 };
 
-// Packer Unpacker Helper for resolvers
-function unpackPacker(e) {
+// ── New FileMoon Resolver (API + AES-256-GCM decryption) ──
+// Endpoint: GET https://filemoon.to/api/videos/{video_id}
+// Requires Origin: https://retrotve.com
+// Encryption: AES-256-GCM, versioned key selection
+//   version N → key_parts[N-1] + key_parts[(31-N)-1]
+//   base64url decode → concatenate → AES-256 key
+//   IV + payload are base64url encoded, last 16 bytes of payload = auth tag
+
+function extractFilemoonId(url) {
+    const m = url.match(/\/(?:e|d)\/([a-z0-9]{12})/i);
+    return m ? m[1] : null;
+}
+
+async function resolveFilemoon(embedUrl) {
     try {
-        let n = e.match(/eval\(function\(p,a,c,k,e,[rd]\)\{.*?\}\s*\('([\s\S]*?)',\s*(\d+),\s*(\d+),\s*'([\s\S]*?)'\.split\('\|'\)/);
-        if (!n) return null;
-        let [, t, u, r, l] = n;
-        u = parseInt(u), r = parseInt(r), l = l.split("|");
-        let a = (i, s) => {
-            let o = "0123456789abcdefghijklmnopqrstuvwxyz", c = "";
-            for (; i > 0; )
-                c = o[i % s] + c, i = Math.floor(i / s);
-            return c || "0";
+        const videoId = extractFilemoonId(embedUrl);
+        if (!videoId) return null;
+
+        const apiUrl = `https://filemoon.to/api/videos/${videoId}`;
+        const res = await fetch(apiUrl, {
+            headers: {
+                "User-Agent": UA,
+                "Accept": "application/json, text/plain, */*",
+                "Origin": "https://retrotve.com",
+                "Referer": "https://retrotve.com/"
+            },
+            redirect: "follow"
+        });
+
+        if (!res.ok) return null;
+        const data = await res.json();
+        const pb = data.playback;
+        if (!pb || pb.algorithm !== "AES-256-GCM") return null;
+
+        // Versioned key derivation (from FileMoon JS bundle)
+        const ver = parseInt(pb.version, 10);
+        const idx1 = ver - 1;              // 0-indexed
+        const idx2 = (31 - ver) - 1;       // 0-indexed
+
+        const kp1 = pb.key_parts[idx1];
+        const kp2 = pb.key_parts[idx2];
+        if (!kp1 || !kp2) return null;
+
+        const rawKey = Buffer.concat([b64urlDecode(kp1), b64urlDecode(kp2)]); // 32 bytes
+        const iv = b64urlDecode(pb.iv);
+        const fullPayload = b64urlDecode(pb.payload);
+        const ciphertext = fullPayload.subarray(0, fullPayload.length - 16);
+        const authTag = fullPayload.subarray(fullPayload.length - 16);
+
+        const decipher = crypto.createDecipheriv("aes-256-gcm", rawKey, iv);
+        decipher.setAuthTag(authTag);
+        let decrypted = decipher.update(ciphertext);
+        decrypted = Buffer.concat([decrypted, decipher.final()]);
+
+        const inner = JSON.parse(decrypted.toString("utf8"));
+        const sources = inner.sources || [];
+        if (sources.length === 0) return null;
+
+        const best = sources[0]; // first source is usually highest quality
+        return {
+            url: best.url,
+            server: "FileMoon",
+            quality: best.label || "720p",
+            headers: {
+                "User-Agent": UA,
+                Referer: "https://retrotve.com/",
+                Origin: "https://retrotve.com"
+            }
         };
-        return t = t.replace(/\b\w+\b/g, (i) => {
-            let s = parseInt(i, 36);
-            return s < l.length && l[s] ? l[s] : a(s, u);
-        }), t;
-    } catch (n) {
+    } catch (err) {
+        // API-based resolution failed — embed URL may still be playable in browser
         return null;
     }
 }
@@ -66,29 +126,6 @@ async function resolveOkRu(embedUrl) {
     } catch (err) {
         return null;
     }
-}
-
-async function resolveFilemoon(embedUrl) {
-    try {
-        let res = await fetch(embedUrl, { headers: { "User-Agent": UA, Referer: BASE_URL } });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        let text = await res.text();
-        let evalMatch = text.match(/eval\(function\(p,a,c,k,e,[rd]\)[\s\S]*?\.split\('\|'\)[^\)]*\)\)/);
-        if (evalMatch) {
-            let unpacked = unpackPacker(evalMatch[0]);
-            if (unpacked) {
-                let m3 = unpacked.match(/https?:\/\/[^"'\s\\]+\.m3u8[^"'\s\\]*/i);
-                if (m3) return { url: m3[0], server: "FileMoon", quality: "1080p", headers: { "User-Agent": UA, Referer: embedUrl } };
-            }
-        }
-        let m3 = text.match(/https?:\/\/[^"'\s]+\.m3u8[^"'\s]*/i);
-        if (m3) {
-            return { url: m3[0], server: "FileMoon", quality: "720p", headers: { "User-Agent": UA, Referer: embedUrl } };
-        }
-    } catch (err) {
-        // ignore
-    }
-    return null;
 }
 
 async function resolveEmbed(url) {

@@ -330,7 +330,7 @@
       "id": "retrotve",
       "name": "Colección 2",
       "description": "Catálogo retro de películas y series de televisión clásicas desde retrotve.com.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "author": "latinokodi",
       "supportedTypes": [
         "movie",
