@@ -1,5 +1,95 @@
 const cheerio = require("cheerio");
-const { resolveUrl, UA } = require("./anime_resolver");
+const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
+
+const HTML_HEADERS_RESOLVER = {
+    "User-Agent": UA,
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "es-ES,es;q=0.9,en;q=0.8",
+};
+
+async function fetchText(url, headers = HTML_HEADERS_RESOLVER) {
+    try {
+        const resp = await fetch(url, { headers });
+        if (!resp.ok) return null;
+        return await resp.text();
+    } catch (e) { return null; }
+}
+
+function normalizeExtractedUrl(value) {
+    if (!value || typeof value !== "string") return null;
+    return value.replace(/\\u0026/g, "&").replace(/\\\//g, "/").replace(/&amp;/g, "&")
+        .replace(/%3A/gi, ":").replace(/%2F/gi, "/").replace(/%3F/gi, "?").replace(/%3D/gi, "=").trim();
+}
+
+function findFirstUrl(payload, patterns) {
+    if (!payload || typeof payload !== "string") return null;
+    for (const pattern of patterns) {
+        try {
+            const match = payload.match(pattern);
+            if (match && match[1]) { const c = normalizeExtractedUrl(match[1]); if (c) return c; }
+        } catch (_e) {}
+    }
+    return null;
+}
+
+function isLikelyVideoUrl(url) {
+    if (!url || typeof url !== "string") return false;
+    const lower = url.toLowerCase();
+    for (const p of ["cloudflareinsights","google-analytics","googletagmanager","facebook.net","beacon.min.js",".js?","analytics","pixel","bigbuckbunny","test-videos","sample-video","placeholder"]) {
+        if (lower.includes(p)) return false;
+    }
+    return /\.(mp4|m3u8)$/i.test(url) || lower.includes("video") || lower.includes("stream") || lower.includes(".mp4") || lower.includes(".m3u8");
+}
+
+async function resolveUrl(serverName, embedUrl) {
+    if (!embedUrl) return null;
+    if (embedUrl.includes("mega.nz") || embedUrl.includes("mega.co")) return null;
+    const name = serverName.toLowerCase();
+    let resolved = null;
+    try {
+        if (name.includes("yourupload")) {
+            const html = await fetchText(embedUrl);
+            if (html) { const m = /property\s*=\s*"og:video"/g.exec(html); if (m) { const v = /content\s*=\s*"(\S+)"/g.exec(html.substring(m.index)); if (v) resolved = v[1]; } }
+        } else if (name.includes("mp4upload")) {
+            const html = await fetchText(embedUrl);
+            if (html) { const m = /<script(?:.|\n)+?src:(?:.|\n)*?"(.+?\.mp4)"/g.exec(html); if (m) resolved = m[1]; }
+        } else if (name.includes("voe")) {
+            let html = await fetchText(embedUrl);
+            if (html) { const r = html.match(/window\.location\.href\s*=\s*['"](https?:\/\/[^'"]+)['"]]/i); if (r) html = await fetchText(r[1]); }
+            if (html) resolved = findFirstUrl(html, [/sources?\s*:\s*\[\s*\{[^}]*src\s*:\s*["']([^"']+)["']/i, /"file"\s*:\s*"([^"]+)"/i, /(https?:\/\/[^\s"'<>]+\.(?:mp4|m3u8)[^\s"'<>]*)/i]);
+            if (!isLikelyVideoUrl(resolved)) resolved = null;
+        } else if (name.includes("vidhide")) {
+            const html = await fetchText(embedUrl);
+            if (html) resolved = findFirstUrl(html, [/sources?\s*:\s*\[\s*\{[^}]*(?:file|src)\s*:\s*["'](https?:\/\/[^"']+)["']/i, /"file"\s*:\s*"([^"]+)"/i, /"source"\s*:\s*"([^"]+)"/i, /file\s*:\s*'([^']+)'/i]);
+            if (!isLikelyVideoUrl(resolved)) resolved = null;
+        } else if (name.includes("okru") || name.includes("ok.ru") || name.includes("odnoklassniki")) {
+            const html = await fetchText(embedUrl);
+            if (html) resolved = findFirstUrl(html, [/"metadata"\s*:\s*\{[^}]*"url"\s*:\s*"([^"]+)"/i, /flashvars\s*=\s*\{[^}]*src\s*:\s*"([^"]+)"/i, /videoUrl\s*=\s*"([^"]+)"/i]);
+            if (!isLikelyVideoUrl(resolved)) resolved = null;
+        } else if (name.includes("filemoon")) {
+            const html = await fetchText(embedUrl);
+            if (html) resolved = findFirstUrl(html, [/sources?\s*:\s*\[\s*\{[^}]*src\s*:\s*["']([^"']+)["']/i, /file\s*:\s*"([^"\)]+)"/i]);
+            if (!isLikelyVideoUrl(resolved)) resolved = null;
+        } else if (name.includes("streamwish") || name === "sw") {
+            const html = await fetchText(embedUrl);
+            if (html) {
+                const m = html.match(/(https?:\/\/[^\s"'<>]+\.m3u8[^\s"'<>]*)/i);
+                if (m && !m[1].startsWith("blob:")) { resolved = m[1]; }
+                else {
+                    resolved = findFirstUrl(html, [/(https?:[^\s"']+\.m3u8[^\s"']*)/i, /file\s*:\s*["'](https?:[^\s"']+)["']/i, /"file"\s*:\s*"([^"]+)"/i]);
+                    if (!resolved || resolved.startsWith("blob:") || !isLikelyVideoUrl(resolved)) resolved = null;
+                }
+            }
+        } else if (name.includes("pdrain") || name.includes("pixeldrain")) {
+            const mm = /(.+?:\/\/.+?)\/.+?\/(.+?)(?:\?embed)?$/.exec(embedUrl);
+            if (mm) resolved = `${mm[1]}/api/file/${mm[2]}`;
+        } else if (name.includes("hls")) {
+            if (embedUrl.includes("/play/") || embedUrl.includes("/m3u8/")) resolved = embedUrl.replace("/play/", "/m3u8/");
+        }
+    } catch (err) {}
+    if (resolved && (resolved.includes("mega.nz") || resolved.includes("mega.co"))) return null;
+    return resolved;
+}
 
 const TMDB_KEY = "439c478a771f35c05022f9feabcca01c";
 const BASE_URL = "https://animeav1.com";
