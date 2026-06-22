@@ -669,6 +669,8 @@ async function resolveEmbed(url) {
     const u = url.toLowerCase();
     if (u.includes("vimeos.net") || u.includes("vimeos.cc") || u.includes("vimeos.zip")) return resolveVimeos(url);
     if (u.includes("goodstream.one") || u.includes("goodstream.co")) return resolveGoodstream(url);
+    if (u.includes("uqload")) return resolveUqload(url);
+    if (u.includes("streamlare")) return resolveStreamlare(url);
     return null;
 }
 
@@ -774,3 +776,47 @@ async function getStreams(id, type, season, episode) {
 }
 
 module.exports = { getStreams };
+
+async function resolveUqload(embedUrl) {
+    try {
+        const html = await fetch(embedUrl, {
+            headers: { "User-Agent": USER_AGENT, "Referer": HOST }
+        }).then(r => r.text());
+        const symMatch = html.match(/,\d+,'([\s\S]+?)'\.split\('\|'\)/);
+        if (symMatch) {
+            const symbols = symMatch[1].split('|');
+            let slug = null;
+            for (const sym of symbols) {
+                if (sym.endsWith('_n') && sym.length > 5) { slug = sym.replace('_n', ''); break; }
+            }
+            if (!slug) {
+                for (const sym of symbols) {
+                    if (sym.endsWith('_sli') && sym.length > 6) { slug = sym.replace('_sli', ''); break; }
+                }
+            }
+            if (slug) {
+                const m3u8Url = `https://strm1.uqload.is/hls/${slug}/master.m3u8`;
+                return { url: m3u8Url, server: "Uqload", quality: "720p", headers: { "Referer": embedUrl, "User-Agent": USER_AGENT } };
+            }
+        }
+    } catch (e) {}
+    return null;
+}
+
+async function resolveStreamlare(embedUrl) {
+    try {
+        const id = embedUrl.split("/").pop();
+        const apiUrl = `https://streamlare.com/api/video/stream/get?video=${id}`;
+        const resp = await fetch(apiUrl, {
+            headers: { "User-Agent": USER_AGENT, "Referer": embedUrl, "Accept": "application/json" }
+        });
+        if (!resp.ok) return null;
+        const data = await resp.json();
+        const sources = data?.result?.sources || data?.sources || [];
+        const best = sources.sort((a, b) => (parseInt(b.quality) || 0) - (parseInt(a.quality) || 0))[0];
+        if (best?.url) {
+            return { url: best.url, server: "Streamlare", quality: best.quality ? best.quality + "p" : "1080p", headers: { "Referer": embedUrl, "User-Agent": USER_AGENT } };
+        }
+    } catch (e) {}
+    return null;
+}

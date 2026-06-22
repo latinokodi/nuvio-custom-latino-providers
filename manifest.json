@@ -59,51 +59,6 @@
       ]
     },
     {
-      "id": "seriesflix",
-      "name": "Seriesflix",
-      "description": "Streams en Latino desde Seriesflix.",
-      "version": "1.0.0",
-      "author": "latinokodi",
-      "supportedTypes": [
-        "tv"
-      ],
-      "filename": "providers/seriesflix.js",
-      "enabled": true,
-      "contentLanguage": [
-        "es"
-      ]
-    },
-    {
-      "id": "seriesgato",
-      "name": "SeriesGato",
-      "description": "Una de las fuentes más actualizadas para series con audio dual (Latino/Inglés) desde Gatonplayseries.",
-      "version": "1.0.0",
-      "author": "latinokodi",
-      "supportedTypes": [
-        "tv"
-      ],
-      "filename": "providers/seriesgato.js",
-      "enabled": true,
-      "contentLanguage": [
-        "es"
-      ]
-    },
-    {
-      "id": "seriespapaya",
-      "name": "SeriesPapaya",
-      "description": "Gran catálogo de series, incluyendo contenido clásico y estrenos desde Magistv24.",
-      "version": "1.0.0",
-      "author": "latinokodi",
-      "supportedTypes": [
-        "tv"
-      ],
-      "filename": "providers/seriespapaya.js",
-      "enabled": true,
-      "contentLanguage": [
-        "es"
-      ]
-    },
-    {
       "id": "vitaminagg",
       "name": "VitaminagG",
       "description": "Películas y series animadas en español latino desde vitaminagg.vip.",
