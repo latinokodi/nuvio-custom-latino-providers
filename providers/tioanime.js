@@ -7,11 +7,58 @@ const HTML_HEADERS_RESOLVER = {
     "Accept-Language": "es-ES,es;q=0.9,en;q=0.8",
 };
 
+// Hosts that return React SPAs or require JS execution — cannot be resolved via plain fetch.
+// Never emit their URLs as embed fallback; Nuvio cannot play them (error 3003).
+const SKIP_HOSTS = [
+    "streamwish.to",   // SPA — "Loading..." shell, needs JS
+    "dhcplay.com",     // Streamwish mirror — same SPA
+    "awish.pro",
+    "sfastwish.com",
+    "wishfast.top",
+    "strwish.com",
+    "hanerix.com",
+    "embedsb.com",     // StreamSB — JS-gated
+    "streamsb.net",
+    "sbplay.org",
+    "hqq.tv",          // Netu — JS-gated
+    "my.mail.ru",      // Mail.ru — login required
+    "animeav1.uns.bio",// UPNShare — hash-based, unresolvable
+    "terabox.com",     // Requires auth
+    "1fichier.com",    // Requires account for large files
+    "mixdrop.ps",      // MixDrop — JS-gated
+    "mixdrop.ag",
+    "filelions.top",   // FileLions — eval-packed SPA
+    "luluvdo.com",
+    "lulustream.com",
+    "bysesukior.com",  // Filemoon clone — React SPA
+];
+
+// Embed URLs that Nuvio's built-in web player CAN handle directly.
+const EMBED_SAFE_PATTERNS = [
+    "mp4upload.com",
+    "streamtape.com",
+    "yourupload.com",
+    "ok.ru",
+    "odnoklassniki.ru",
+    "uqload.is",
+    "uqload.co",
+];
+
 async function fetchText(url, headers = HTML_HEADERS_RESOLVER) {
     try {
         const resp = await fetch(url, { headers });
-        if (!resp.ok) return null;
-        return await resp.text();
+        if (resp.status === 404) return "DEAD";
+        const text = await resp.text();
+        const lower = text.toLowerCase();
+        if (lower.includes("file was deleted") || 
+            lower.includes("no longer exists") || 
+            lower.includes("file not found") || 
+            lower.includes("content restricted") ||
+            lower.includes("file was locked") ||
+            text.length < 100) {
+            return "DEAD";
+        }
+        return text;
     } catch (e) { return null; }
 }
 
@@ -49,36 +96,63 @@ async function resolveUrl(serverName, embedUrl) {
     try {
         if (name.includes("yourupload")) {
             const html = await fetchText(embedUrl);
+            if (html === "DEAD") return "DEAD";
             if (html) { const m = /property\s*=\s*"og:video"/g.exec(html); if (m) { const v = /content\s*=\s*"(\S+)"/g.exec(html.substring(m.index)); if (v) resolved = v[1]; } }
         } else if (name.includes("mp4upload")) {
             const html = await fetchText(embedUrl);
+            if (html === "DEAD") return "DEAD";
             if (html) { const m = /<script(?:.|\n)+?src:(?:.|\n)*?"(.+?\.mp4)"/g.exec(html); if (m) resolved = m[1]; }
         } else if (name.includes("voe")) {
             let html = await fetchText(embedUrl);
+            if (html === "DEAD") return "DEAD";
             if (html) { const r = html.match(/window\.location\.href\s*=\s*['"](https?:\/\/[^'"]+)['"]]/i); if (r) html = await fetchText(r[1]); }
+            if (html === "DEAD") return "DEAD";
             if (html) resolved = findFirstUrl(html, [/sources?\s*:\s*\[\s*\{[^}]*src\s*:\s*["']([^"']+)["']/i, /"file"\s*:\s*"([^"]+)"/i, /(https?:\/\/[^\s"'<>]+\.(?:mp4|m3u8)[^\s"'<>]*)/i]);
             if (!isLikelyVideoUrl(resolved)) resolved = null;
         } else if (name.includes("vidhide")) {
             const html = await fetchText(embedUrl);
+            if (html === "DEAD") return "DEAD";
             if (html) resolved = findFirstUrl(html, [/sources?\s*:\s*\[\s*\{[^}]*(?:file|src)\s*:\s*["'](https?:\/\/[^"']+)["']/i, /"file"\s*:\s*"([^"]+)"/i, /"source"\s*:\s*"([^"]+)"/i, /file\s*:\s*'([^']+)'/i]);
             if (!isLikelyVideoUrl(resolved)) resolved = null;
         } else if (name.includes("okru") || name.includes("ok.ru") || name.includes("odnoklassniki")) {
             const html = await fetchText(embedUrl);
+            if (html === "DEAD") return "DEAD";
             if (html) resolved = findFirstUrl(html, [/"metadata"\s*:\s*\{[^}]*"url"\s*:\s*"([^"]+)"/i, /flashvars\s*=\s*\{[^}]*src\s*:\s*"([^"]+)"/i, /videoUrl\s*=\s*"([^"]+)"/i]);
             if (!isLikelyVideoUrl(resolved)) resolved = null;
-        } else if (name.includes("filemoon")) {
-            const html = await fetchText(embedUrl);
-            if (html) resolved = findFirstUrl(html, [/sources?\s*:\s*\[\s*\{[^}]*src\s*:\s*["']([^"']+)["']/i, /file\s*:\s*"([^"\)]+)"/i]);
-            if (!isLikelyVideoUrl(resolved)) resolved = null;
-        } else if (name.includes("streamwish") || name === "sw") {
-            const html = await fetchText(embedUrl);
+        } else if (name.includes("streamtape")) {
+            const html = await fetchText(embedUrl, { "Referer": BASE_URL + "/" });
+            if (html === "DEAD") return "DEAD";
             if (html) {
-                const m = html.match(/(https?:\/\/[^\s"'<>]+\.m3u8[^\s"'<>]*)/i);
-                if (m && !m[1].startsWith("blob:")) { resolved = m[1]; }
-                else {
-                    resolved = findFirstUrl(html, [/(https?:[^\s"']+\.m3u8[^\s"']*)/i, /file\s*:\s*["'](https?:[^\s"']+)["']/i, /"file"\s*:\s*"([^"]+)"/i]);
-                    if (!resolved || resolved.startsWith("blob:") || !isLikelyVideoUrl(resolved)) resolved = null;
+                const linkMatch = html.match(/getElementById\(['"]robotlink['"]\)\.innerHTML\s*=\s*(['"][^'"]+['"])\s*\+\s*\((['"][^'"]+['"])\)(?:\.substring\((\d+)\))?(?:\.substring\((\d+)\))?/);
+                if (linkMatch) {
+                    const prefix = linkMatch[1].replace(/['"]/g, '');
+                    let mainStr = linkMatch[2].replace(/['"]/g, '');
+                    const sub1 = linkMatch[3] ? parseInt(linkMatch[3], 10) : 0;
+                    const sub2 = linkMatch[4] ? parseInt(linkMatch[4], 10) : 0;
+                    if (sub1) mainStr = mainStr.substring(sub1);
+                    if (sub2) mainStr = mainStr.substring(sub2);
+                    const finalPath = prefix + mainStr;
+                    if (finalPath.startsWith('//')) {
+                        resolved = `https:${finalPath}`;
+                    } else if (finalPath.startsWith('/streamtape.com/')) {
+                        resolved = `https:/${finalPath}`;
+                    } else {
+                        resolved = `https://streamtape.com${finalPath.startsWith('/') ? '' : '/'}${finalPath}`;
+                    }
+                } else {
+                    const rb = html.match(/id=["']robotlink["'][^>]*>([^<]+)</);
+                    if (rb) {
+                        const path = rb[1].trim();
+                        if (path.startsWith('//')) {
+                            resolved = `https:${path}`;
+                        } else if (path.startsWith('/streamtape.com/')) {
+                            resolved = `https:/${path}`;
+                        } else {
+                            resolved = `https://streamtape.com${path.startsWith('/') ? '' : '/'}${path}`;
+                        }
+                    }
                 }
+                if (resolved && !resolved.includes('streamtape')) resolved = null;
             }
         } else if (name.includes("pdrain") || name.includes("pixeldrain")) {
             const mm = /(.+?:\/\/.+?)\/.+?\/(.+?)(?:\?embed)?$/.exec(embedUrl);
@@ -308,13 +382,22 @@ async function getStreams(tmdbId, mediaType, season, episode) {
         const embedUrl = s[1];
         if (!embedUrl) continue;
 
-        // Skip Mega URLs
-        if (embedUrl.includes("mega.nz") || embedUrl.includes("mega.co")) {
-            continue;
-        }
+        if (embedUrl.includes("mega.nz") || embedUrl.includes("mega.co")) continue;
+        try {
+            const embedHost = new URL(embedUrl).hostname;
+            if (SKIP_HOSTS.some(h => embedHost.includes(h))) {
+                console.log(`[TioAnime] Skipping unresolvable host: ${embedHost}`);
+                continue;
+            }
+        } catch (_) {}
 
         console.log(`[TioAnime] Resolving server ${serverName}: ${embedUrl}`);
         const resolved = await resolveUrl(serverName, embedUrl);
+
+        if (resolved === "DEAD") {
+            console.log(`[TioAnime] Stream is dead/deleted: ${embedUrl}`);
+            continue;
+        }
 
         if (resolved) {
             streams.push({
@@ -322,22 +405,22 @@ async function getStreams(tmdbId, mediaType, season, episode) {
                 title: `${serverName} \xB7 Direct`,
                 url: resolved,
                 quality: "720p",
-                headers: {
-                    "Referer": BASE_URL + "/",
-                    "User-Agent": UA
-                }
+                headers: { "Referer": BASE_URL + "/", "User-Agent": UA }
             });
         } else {
-            streams.push({
-                name: "TioAnime",
-                title: `${serverName} (Embed)`,
-                url: embedUrl,
-                quality: "720p",
-                headers: {
-                    "Referer": BASE_URL + "/",
-                    "User-Agent": UA
-                }
-            });
+            const isEmbedSafe = EMBED_SAFE_PATTERNS.some(h => embedUrl.includes(h)) && 
+                (embedUrl.includes("/e/") || embedUrl.includes("/embed") || embedUrl.includes("/embed-") || embedUrl.includes("ok.ru") || embedUrl.includes("odnoklassniki"));
+            if (isEmbedSafe) {
+                streams.push({
+                    name: "TioAnime",
+                    title: `${serverName} (Embed)`,
+                    url: embedUrl,
+                    quality: "720p",
+                    headers: { "Referer": BASE_URL + "/", "User-Agent": UA }
+                });
+            } else {
+                console.log(`[TioAnime] Dropping non-resolvable embed: ${embedUrl}`);
+            }
         }
     }
 
