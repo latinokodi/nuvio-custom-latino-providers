@@ -68,7 +68,7 @@ function N(n) {
     }
   });
 }
-var y = "439c478a771f35c05022f9feabcca01c", H = "https://seriesflixhd.buzz", L = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
+var y = "439c478a771f35c05022f9feabcca01c", H = "https://seriesflixhd.lol", L = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
 function h(n) {
   return n.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/&/g, "y").replace(/[^a-z0-9\s-]/g, " ").replace(/\s+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
 }

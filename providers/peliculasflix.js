@@ -23,7 +23,7 @@ const HEADERS = {
 
 const DEBUG = false;
 function log(...args) {
-    if (DEBUG) log(...args);
+    if (DEBUG) console.log(...args);
 }
 
 // ---------------------------------------------------------------------------
@@ -162,7 +162,8 @@ async function getDetail(slug) {
 const MIRRORS = {
     STREAMWISH: ["hlswish", "streamwish", "hglink", "hglamioz", "audinifer",
                  "embedwish", "awish", "dwish", "strwish", "wishembed", "wishfast", "hanerix",
-                 "sfastwish", "jodwish", "swhoi", "swdyu", "playerwish"],
+                 "sfastwish", "jodwish", "swhoi", "swdyu", "playerwish",
+                 "sbfast", "watchsb"],
     VIDHIDE:    ["vidhide", "minochinos", "vadisov", "vaiditv", "amusemre",
                  "callistanise", "vhaudm", "mdfury", "dintezuvio", "acek-cdn",
                  "vedonm", "vidhidepro", "vidhidevip", "masukestin", "filelions"],
@@ -171,7 +172,7 @@ const MIRRORS = {
     VOE:        ["voe.sx", "voe-sx", "voex.sx", "marissashare", "cloudwindow",
                  "marissasharecareer"],
     DOODSTREAM: ["doodstream", "dood.", "d000d", "d0000d", "doodapi", "d0o0d",
-                 "do0od", "dooodster", "do7go", "ds2play", "ds2video"],
+                 "do0od", "dooodster", "do7go", "ds2play", "ds2video", "dood.yt"],
     STREAMTAPE: ["streamtape"],
 };
 
@@ -658,7 +659,7 @@ async function resolveOkru(embedUrl) {
 // ---------------------------------------------------------------------------
 
 async function resolveEmbed(url) {
-    if (url.includes("ok.ru") || url.includes("odnoklassniki")) return resolveOkru(url);
+    if (url.includes("ok.ru") || url.includes("okru.link") || url.includes("odnoklassniki")) return resolveOkru(url);
     if (isMirror(url, "STREAMWISH")) return resolveStreamwish(url);
     if (isMirror(url, "VIDHIDE"))    return resolveVidhide(url);
     if (isMirror(url, "FILEMOON"))   return resolveFilemoon(url);

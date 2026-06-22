@@ -125,23 +125,6 @@
       "supportsExternalPlayer": true
     },
     {
-      "id": "zonaleros",
-      "name": "ZonaLeros",
-      "description": "Películas y series en HD con audio Latino desde Zona-Leros.com.",
-      "version": "1.0.0",
-      "author": "latinokodi",
-      "supportedTypes": [
-        "movie",
-        "tv"
-      ],
-      "filename": "providers/zonaleros.js",
-      "enabled": true,
-      "contentLanguage": [
-        "es"
-      ],
-      "logo": "https://zona-leros.com/favicon.ico"
-    },
-    {
       "id": "verpelis",
       "name": "VerPelis",
       "description": "Películas y series actuales en español latino e inglés de verpelis.gratis.",
@@ -252,10 +235,15 @@
       "description": "Películas y series en Latino, Castellano y VOSE desde EntrePeliculasySeries.nz.",
       "version": "1.0.0",
       "author": "balandro-ported",
-      "supportedTypes": ["movie", "tv"],
+      "supportedTypes": [
+        "movie",
+        "tv"
+      ],
       "filename": "providers/entrepeliculasyseries.js",
       "enabled": true,
-      "contentLanguage": ["es"],
+      "contentLanguage": [
+        "es"
+      ],
       "logo": "https://entrepeliculasyseries.nz/favicon.ico"
     },
     {
@@ -264,10 +252,15 @@
       "description": "Películas y series en Latino, Castellano y VOSE desde MegaDede.mobi.",
       "version": "1.0.0",
       "author": "balandro-ported",
-      "supportedTypes": ["movie", "tv"],
+      "supportedTypes": [
+        "movie",
+        "tv"
+      ],
       "filename": "providers/megadedeoficial.js",
       "enabled": true,
-      "contentLanguage": ["es"],
+      "contentLanguage": [
+        "es"
+      ],
       "logo": "https://megadede.mobi/favicon.ico"
     },
     {
@@ -276,10 +269,14 @@
       "description": "Películas en Latino, Castellano y VOSE desde PeliculasFlix.co.",
       "version": "1.0.0",
       "author": "balandro-ported",
-      "supportedTypes": ["movie"],
+      "supportedTypes": [
+        "movie"
+      ],
       "filename": "providers/peliculasflix.js",
       "enabled": true,
-      "contentLanguage": ["es"],
+      "contentLanguage": [
+        "es"
+      ],
       "logo": "https://peliculasflix.co/favicon.ico"
     },
     {
@@ -288,10 +285,15 @@
       "description": "Gran catálogo de películas y series en Latino/Español desde Pelis182.net.",
       "version": "1.0.0",
       "author": "latinokodi",
-      "supportedTypes": ["movie", "tv"],
+      "supportedTypes": [
+        "movie",
+        "tv"
+      ],
       "filename": "providers/pelis182.js",
       "enabled": true,
-      "contentLanguage": ["es"]
+      "contentLanguage": [
+        "es"
+      ]
     },
     {
       "id": "lacartoons",
