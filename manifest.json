@@ -344,23 +344,6 @@
       "logo": "https://retrotve.com/favicon.ico"
     },
     {
-      "id": "animeflv",
-      "name": "AnimeFLV",
-      "description": "El principal portal de anime en español con excelente calidad y rapidez.",
-      "version": "1.0.0",
-      "author": "latinokodi",
-      "supportedTypes": [
-        "movie",
-        "tv"
-      ],
-      "filename": "providers/animeflv.js",
-      "enabled": true,
-      "contentLanguage": [
-        "es"
-      ],
-      "logo": "https://www3.animeflv.net/favicon.ico"
-    },
-    {
       "id": "tioanime",
       "name": "TioAnime",
       "description": "Excelente portal para ver anime online gratis en español con múltiples servidores.",
