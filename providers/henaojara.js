@@ -7,6 +7,14 @@ const HTML_HEADERS_RESOLVER = {
     "Accept-Language": "es-ES,es;q=0.9,en;q=0.8",
 };
 
+// Hosts whose embed pages are React SPAs or require JS execution.
+// Returning their embed URL as fallback produces unplayable streams.
+const SKIP_HOSTS = [
+    "bysesukior.com",   // Filemoon clone — React SPA, no scrappable video data
+    "luluvdo.com",      // Lulustream — files expire within hours
+    "lulustream.com",
+];
+
 async function fetchText(url, headers = HTML_HEADERS_RESOLVER) {
     try {
         const resp = await fetch(url, { headers });
@@ -66,10 +74,32 @@ async function resolveUrl(serverName, embedUrl) {
             const html = await fetchText(embedUrl);
             if (html) resolved = findFirstUrl(html, [/"metadata"\s*:\s*\{[^}]*"url"\s*:\s*"([^"]+)"/i, /flashvars\s*=\s*\{[^}]*src\s*:\s*"([^"]+)"/i, /videoUrl\s*=\s*"([^"]+)"/i]);
             if (!isLikelyVideoUrl(resolved)) resolved = null;
+        } else if (name.includes("uqload")) {
+            // Uqload uses Dean Edwards p,a,c,k,e,r encoding.
+            // The HLS slug is embedded in the symbol table as "<slug>_n" or "<slug>_sli".
+            const html = await fetchText(embedUrl, { "Referer": BASE_URL + "/" });
+            if (html) {
+                const symMatch = html.match(/,\d+,'([\s\S]+?)'\.split\('\|'\)/);
+                if (symMatch) {
+                    const symbols = symMatch[1].split('|');
+                    let slug = null;
+                    for (const sym of symbols) {
+                        if (sym.endsWith('_n') && sym.length > 5) { slug = sym.replace('_n', ''); break; }
+                    }
+                    if (!slug) {
+                        for (const sym of symbols) {
+                            if (sym.endsWith('_sli') && sym.length > 6) { slug = sym.replace('_sli', ''); break; }
+                        }
+                    }
+                    if (slug) resolved = `https://strm1.uqload.is/hls/${slug}/master.m3u8`;
+                }
+            }
         } else if (name.includes("filemoon")) {
-            const html = await fetchText(embedUrl);
-            if (html) resolved = findFirstUrl(html, [/sources?\s*:\s*\[\s*\{[^}]*src\s*:\s*["']([^"']+)["']/i, /file\s*:\s*"([^"\)]+)"/i]);
-            if (!isLikelyVideoUrl(resolved)) resolved = null;
+            // bysesukior.com and other Filemoon clones are React SPAs.
+            // Plain fetch returns an empty shell — no video data is server-rendered.
+            // These must be resolved via ECDSA API calls (complex), so we skip them
+            // to avoid returning unplayable embed URLs as fallback.
+            resolved = null;
         } else if (name.includes("streamwish") || name === "sw") {
             const html = await fetchText(embedUrl);
             if (html) {
@@ -262,6 +292,16 @@ async function getStreams(tmdbId, mediaType, season, episode) {
                 score += 10;
             }
 
+            // Prefer entries whose slug does NOT contain season/arc suffixes
+            // when the request is for Season 1 (episode == 1).
+            // This prevents S4 arcs (e.g. "hashira-geiko-hen") from outscoring S1 root entries.
+            if (mediaType === "tv" && season === 1) {
+                // Match arc keywords mid-slug (e.g. "-hen-") OR at end of slug (e.g. "-hen")
+                const arcSuffixes = [/-(arc|hen|kai|part|temporada|season)(-|$)/i, /season[\s-]\d+/i];
+                const hasSuffix = arcSuffixes.some(re => re.test(res.slug));
+                if (!hasSuffix) score += 8; // slight bonus for clean root slug
+            }
+
             console.log(`  - Candidate: "${res.title}" (${res.type}) -> Score: ${score} -> ${res.slug}`);
             if (score > bestScore && score >= 40) {
                 bestScore = score;
@@ -369,10 +409,15 @@ async function getStreams(tmdbId, mediaType, season, episode) {
         const embedUrl = c.url;
         if (!embedUrl) continue;
 
-        // Skip Mega URLs
-        if (embedUrl.includes("mega.nz") || embedUrl.includes("mega.co")) {
-            continue;
-        }
+        // Skip Mega and known unresolvable/React-SPA hosts
+        if (embedUrl.includes("mega.nz") || embedUrl.includes("mega.co")) continue;
+        try {
+            const embedHost = new URL(embedUrl).hostname;
+            if (SKIP_HOSTS.some(h => embedHost.includes(h))) {
+                console.log(`[Henaojara] Skipping unresolvable host: ${embedHost}`);
+                continue;
+            }
+        } catch (_) {}
 
         console.log(`[Henaojara] Resolving server ${serverName}: ${embedUrl}`);
         const resolved = await resolveUrl(serverName, embedUrl);
@@ -389,16 +434,24 @@ async function getStreams(tmdbId, mediaType, season, episode) {
                 }
             });
         } else {
-            streams.push({
-                name: "Henaojara",
-                title: `${serverName} (Embed)`,
-                url: embedUrl,
-                quality: "720p",
-                headers: {
-                    "Referer": BASE_URL + "/",
-                    "User-Agent": UA
-                }
-            });
+            // Only emit embed fallback for hosts that Nuvio's internal player can handle.
+            // Never emit embed URLs for React SPAs or JS-gated players.
+            const isEmbedSafe = ["mp4upload", "streamtape", "yourupload", "hqq", "streamwish", "dhcplay", "uqload"]
+                .some(h => embedUrl.includes(h));
+            if (isEmbedSafe) {
+                streams.push({
+                    name: "Henaojara",
+                    title: `${serverName} (Embed)`,
+                    url: embedUrl,
+                    quality: "720p",
+                    headers: {
+                        "Referer": BASE_URL + "/",
+                        "User-Agent": UA
+                    }
+                });
+            } else {
+                console.log(`[Henaojara] Dropping non-resolvable embed: ${embedUrl}`);
+            }
         }
     }
 
