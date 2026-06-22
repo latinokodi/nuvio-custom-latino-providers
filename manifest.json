@@ -292,6 +292,56 @@
       "filename": "providers/pelis182.js",
       "enabled": true,
       "contentLanguage": ["es"]
+    },
+    {
+      "id": "lacartoons",
+      "name": "La Cartoons",
+      "description": "Series animadas y cartoons clásicos en español latino desde LaCartoons.com.",
+      "version": "1.0.0",
+      "author": "latinokodi",
+      "supportedTypes": [
+        "tv"
+      ],
+      "filename": "providers/lacartoons.js",
+      "enabled": true,
+      "contentLanguage": [
+        "es"
+      ],
+      "logo": "https://images2.imgbox.com/fc/26/S7f7dn42_o.png"
+    },
+    {
+      "id": "retrolatino",
+      "name": "Retro Latino",
+      "description": "Películas, series y caricaturas clásicas en español latino desde Cineova (Retro Latino).",
+      "version": "1.0.0",
+      "author": "latinokodi",
+      "supportedTypes": [
+        "movie",
+        "tv"
+      ],
+      "filename": "providers/retrolatino.js",
+      "enabled": true,
+      "contentLanguage": [
+        "es"
+      ],
+      "logo": "https://cineova.site/favicon.ico"
+    },
+    {
+      "id": "retrotve",
+      "name": "Colección 2",
+      "description": "Catálogo retro de películas y series de televisión clásicas desde retrotve.com.",
+      "version": "1.0.0",
+      "author": "latinokodi",
+      "supportedTypes": [
+        "movie",
+        "tv"
+      ],
+      "filename": "providers/retrotve.js",
+      "enabled": true,
+      "contentLanguage": [
+        "es"
+      ],
+      "logo": "https://retrotve.com/favicon.ico"
     }
   ]
 }
