@@ -297,7 +297,7 @@
       "id": "lacartoons",
       "name": "La Cartoons",
       "description": "Series animadas y cartoons clásicos en español latino desde LaCartoons.com.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "author": "latinokodi",
       "supportedTypes": [
         "tv"

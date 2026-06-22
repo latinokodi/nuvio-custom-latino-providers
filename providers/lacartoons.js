@@ -1,4 +1,5 @@
 const cheerio = require("cheerio");
+const CryptoJS = require("crypto-js");
 
 const TMDB_KEY = "439c478a771f35c05022f9feabcca01c";
 const BASE_URL = "https://www.lacartoons.com";
@@ -73,6 +74,118 @@ async function resolveOkRu(embedUrl) {
         };
     } catch (err) {
         console.error(`[La Cartoons] OkRu Resolver Error: ${err.message}`);
+        return null;
+    }
+}
+
+// ── Rpmvid / Cubeembed Resolver ──
+// API: GET {host}/api/v1/video?id={id}&w=1920&h=1080
+// Response: HEX-encoded AES-CBC payload, decrypt with key/iv
+async function resolveRpmvid(embedUrl) {
+    try {
+        let id = "";
+        const idx = embedUrl.indexOf("#");
+        if (idx !== -1 && idx < embedUrl.length - 1) {
+            id = embedUrl.substring(idx + 1).split("&")[0];
+        } else {
+            id = embedUrl.split("/").pop().replace(".html", "");
+        }
+        if (!id) return null;
+        console.log(`[La Cartoons] Rpmvid resolving id: ${id}`);
+
+        // Extract the main host from the embed URL
+        let mainLink;
+        try {
+            const u = new URL(embedUrl);
+            mainLink = `${u.protocol}//${u.host}`;
+        } catch (e) {
+            mainLink = "https://rpmvid.com";
+        }
+        console.log(`[La Cartoons] Rpmvid mainLink: ${mainLink}`);
+
+        const apiUrl = `${mainLink}/api/v1/video?id=${encodeURIComponent(id)}&w=1920&h=1080`;
+
+        const resp = await fetch(apiUrl, {
+            headers: {
+                "User-Agent": UA,
+                "Referer": mainLink,
+                "Accept": "*/*"
+            }
+        });
+
+        if (!resp.ok) {
+            console.log(`[La Cartoons] Rpmvid API returned ${resp.status}`);
+            return null;
+        }
+
+        const hexPayload = await resp.text();
+        console.log(`[La Cartoons] Rpmvid hex payload: ${hexPayload.substring(0, 60)}...`);
+
+        // Decrypt hex AES-CBC payload
+        const key = CryptoJS.enc.Utf8.parse("kiemtienmua911ca");
+        const iv = CryptoJS.enc.Utf8.parse("1234567890oiuytr");
+        const hexBytes = CryptoJS.enc.Hex.parse(hexPayload);
+        const base64Cipher = CryptoJS.enc.Base64.stringify(hexBytes);
+        
+        const decrypted = CryptoJS.AES.decrypt(base64Cipher, key, {
+            iv: iv,
+            mode: CryptoJS.mode.CBC,
+            padding: CryptoJS.pad.Pkcs7
+        }).toString(CryptoJS.enc.Utf8);
+
+        if (!decrypted) {
+            console.log(`[La Cartoons] Rpmvid: decryption produced empty string`);
+            return null;
+        }
+
+        console.log(`[La Cartoons] Rpmvid decrypted: ${decrypted.substring(0, 200)}`);
+        const payload = JSON.parse(decrypted);
+
+        // Extract stream URL from hls, hlsVideoTiktok, or cf fields
+        let finalUrl = null;
+        if (payload.hls) {
+            finalUrl = payload.hls.startsWith("http") ? payload.hls : `${mainLink}${payload.hls}`;
+        } else if (payload.hlsVideoTiktok) {
+            let v = "";
+            try {
+                const config = JSON.parse(payload.streamingConfig || "{}");
+                v = (config.adjust && config.adjust.Tiktok && config.adjust.Tiktok.params && config.adjust.Tiktok.params.v) || "";
+            } catch (e) {}
+            const query = v ? `?v=${v}` : "";
+            const path = payload.hlsVideoTiktok.startsWith("http") ? payload.hlsVideoTiktok : `${mainLink}${payload.hlsVideoTiktok}`;
+            finalUrl = `${path}${query}`;
+        } else if (payload.cf) {
+            let cfUrl = payload.cf.startsWith("http") ? payload.cf : payload.cf;
+            // Add expiry tokens
+            if (payload.cfExpire) {
+                const parts = payload.cfExpire.split("::");
+                if (parts.length >= 2) {
+                    cfUrl = `${cfUrl}?t=${parts[0]}&e=${parts[1]}`;
+                }
+            }
+            finalUrl = cfUrl;
+        }
+
+        if (finalUrl) {
+            if (finalUrl.includes(".txt")) {
+                finalUrl += "#index.m3u8";
+            }
+            console.log(`[La Cartoons] Rpmvid resolved: ${finalUrl.substring(0, 120)}...`);
+            return {
+                url: finalUrl,
+                quality: "720p",
+                server: "Rpmvid",
+                headers: {
+                    "Referer": mainLink,
+                    "User-Agent": UA
+                }
+            };
+        }
+
+        console.log(`[La Cartoons] Rpmvid: no hls/cf field in decrypted payload`);
+        return null;
+    } catch (err) {
+        console.error(`[La Cartoons] Rpmvid Error: ${err.message}`);
         return null;
     }
 }
@@ -411,15 +524,20 @@ async function getStreams(tmdbId, mediaType, season, episode) {
     if (iframeSrc.includes("ok.ru") || iframeSrc.includes("odnoklassniki")) {
         console.log("[La Cartoons] Attempting to resolve ok.ru stream...");
         resolved = await resolveOkRu(iframeSrc);
+    } else if (iframeSrc.includes("rpmvid") || iframeSrc.includes("cubeembed") || iframeSrc.includes("upns")) {
+        console.log("[La Cartoons] Attempting to resolve rpmvid/cubeembed stream...");
+        resolved = await resolveRpmvid(iframeSrc);
     }
 
     const streams = [];
     if (resolved) {
+        const quality = resolved.quality || "720p";
+        const server = resolved.server || "Direct";
         streams.push({
             name: "La Cartoons",
-            title: `${resolved.quality} \xB7 OkRu \xB7 Direct`,
+            title: `${quality} \\xB7 ${server} \\xB7 Direct`,
             url: resolved.url,
-            quality: resolved.quality,
+            quality: quality,
             headers: resolved.headers
         });
     } else {
