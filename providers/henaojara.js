@@ -158,9 +158,16 @@ async function getStreams(tmdbId, mediaType, season, episode) {
                 }
             }
 
-            const isMovieType = res.type.toLowerCase().includes("pelicula") || res.type.toLowerCase().includes("especial");
-            if (mediaType === "movie" && isMovieType) {
-                score += 10;
+            const normType = res.type.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            const isPelicula = normType.includes("pelicula");
+            const isEspecial = normType.includes("especial");
+            const isMovieType = isPelicula || isEspecial;
+            if (mediaType === "movie" && isPelicula) {
+                score += 15; // strong bonus — real movies must outrank specials/OVAs
+            } else if (mediaType === "movie" && isEspecial) {
+                score += 5; // lower bonus so real movies outrank OVA specials
+            } else if (mediaType === "movie" && !isMovieType) {
+                score = Math.max(score - 20, 0); // penalise TV series when searching for a movie
             } else if (mediaType === "tv" && !isMovieType) {
                 score += 10;
             }
