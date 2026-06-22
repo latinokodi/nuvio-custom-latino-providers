@@ -342,6 +342,74 @@
         "es"
       ],
       "logo": "https://retrotve.com/favicon.ico"
+    },
+    {
+      "id": "animeflv",
+      "name": "AnimeFLV",
+      "description": "El principal portal de anime en español con excelente calidad y rapidez.",
+      "version": "1.0.0",
+      "author": "latinokodi",
+      "supportedTypes": [
+        "movie",
+        "tv"
+      ],
+      "filename": "providers/animeflv.js",
+      "enabled": true,
+      "contentLanguage": [
+        "es"
+      ],
+      "logo": "https://www3.animeflv.net/favicon.ico"
+    },
+    {
+      "id": "tioanime",
+      "name": "TioAnime",
+      "description": "Excelente portal para ver anime online gratis en español con múltiples servidores.",
+      "version": "1.0.0",
+      "author": "latinokodi",
+      "supportedTypes": [
+        "movie",
+        "tv"
+      ],
+      "filename": "providers/tioanime.js",
+      "enabled": true,
+      "contentLanguage": [
+        "es"
+      ],
+      "logo": "https://tioanime.com/assets/img/icon.png"
+    },
+    {
+      "id": "animeav1",
+      "name": "AnimeAV1",
+      "description": "Portal de anime especializado con encode moderno y gran velocidad.",
+      "version": "1.0.0",
+      "author": "latinokodi",
+      "supportedTypes": [
+        "movie",
+        "tv"
+      ],
+      "filename": "providers/animeav1.js",
+      "enabled": true,
+      "contentLanguage": [
+        "es"
+      ],
+      "logo": "https://animeav1.com/favicon.ico"
+    },
+    {
+      "id": "henaojara",
+      "name": "Henaojara",
+      "description": "Gran catálogo de anime en audio latino y castellano desde henaojara.net.",
+      "version": "1.0.0",
+      "author": "latinokodi",
+      "supportedTypes": [
+        "movie",
+        "tv"
+      ],
+      "filename": "providers/henaojara.js",
+      "enabled": true,
+      "contentLanguage": [
+        "es"
+      ],
+      "logo": "https://ww1.henaojara.net/favicon.ico"
     }
   ]
 }
