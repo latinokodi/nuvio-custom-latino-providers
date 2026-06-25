@@ -1,6 +1,6 @@
 {
   "name": "Nuvio Custom Latino Providers",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "scrapers": [
     {
       "id": "areshd",
@@ -84,7 +84,7 @@
       "name": "VerPelis",
       "description": "Películas y series actuales en español latino e inglés de verpelis.gratis.",
       "version": "1.0.0",
-      "author": "balandro-ported",
+      "author": "custom-latino",
       "supportedTypes": [
         "movie",
         "tv"
@@ -155,7 +155,7 @@
       "name": "AllpeliculasSE",
       "description": "Películas y series en Latino, Castellano y VOSE desde Allpeliculas.",
       "version": "1.0.0",
-      "author": "balandro-ported",
+      "author": "custom-latino",
       "supportedTypes": [
         "movie",
         "tv"
@@ -172,7 +172,7 @@
       "name": "EliFilms",
       "description": "Películas y series en Latino, Castellano y VOSE desde AllCalidad.re (EliFilms).",
       "version": "1.0.0",
-      "author": "balandro-ported",
+      "author": "custom-latino",
       "supportedTypes": [
         "movie",
         "tv"
@@ -189,7 +189,7 @@
       "name": "EntrePeliculasySeries",
       "description": "Películas y series en Latino, Castellano y VOSE desde EntrePeliculasySeries.nz.",
       "version": "1.0.0",
-      "author": "balandro-ported",
+      "author": "custom-latino",
       "supportedTypes": [
         "movie",
         "tv"
@@ -206,7 +206,7 @@
       "name": "MegaDedeOficial",
       "description": "Películas y series en Latino, Castellano y VOSE desde MegaDede.mobi.",
       "version": "1.0.0",
-      "author": "balandro-ported",
+      "author": "custom-latino",
       "supportedTypes": [
         "movie",
         "tv"
@@ -223,7 +223,7 @@
       "name": "PeliculasFlix",
       "description": "Películas en Latino, Castellano y VOSE desde PeliculasFlix.co.",
       "version": "1.0.0",
-      "author": "balandro-ported",
+      "author": "custom-latino",
       "supportedTypes": [
         "movie"
       ],
@@ -350,6 +350,71 @@
         "es"
       ],
       "logo": "https://ww1.henaojara.net/favicon.ico"
+    },
+    {
+      "id": "seriesgato",
+      "name": "SeriesGato",
+      "description": "Una de las fuentes más actualizadas para series con audio dual (Latino/Inglés) desde Gatonplayseries.",
+      "version": "1.1.0",
+      "author": "latinokodi",
+      "supportedTypes": [
+        "tv"
+      ],
+      "filename": "providers/seriesgato.js",
+      "enabled": true,
+      "contentLanguage": [
+        "es"
+      ]
+    },
+    {
+      "id": "mirandogratis",
+      "name": "MirandoGratis",
+      "description": "Películas en Latino, Castellano y VOSE desde MirandoGratis.",
+      "version": "1.0.0",
+      "author": "custom-latino",
+      "supportedTypes": [
+        "movie"
+      ],
+      "filename": "providers/mirandogratis.js",
+      "enabled": true,
+      "contentLanguage": [
+        "es"
+      ],
+      "logo": "https://mirandogratis.com/favicon.ico"
+    },
+    {
+      "id": "seriesmetro",
+      "name": "SeriesMetro",
+      "description": "Películas y series en HD desde SeriesMetro.net.",
+      "version": "1.0.0",
+      "author": "custom-latino",
+      "supportedTypes": [
+        "movie",
+        "tv"
+      ],
+      "filename": "providers/seriesmetro.js",
+      "enabled": true,
+      "contentLanguage": [
+        "es"
+      ],
+      "logo": "https://www3.seriesmetro.net/favicon.ico"
+    },
+    {
+      "id": "homecine",
+      "name": "HomeCine",
+      "description": "Películas y series de HomeCine (homecine.to).",
+      "version": "1.0.0",
+      "author": "custom-latino",
+      "supportedTypes": [
+        "movie",
+        "tv"
+      ],
+      "filename": "providers/homecine.js",
+      "enabled": true,
+      "contentLanguage": [
+        "es"
+      ],
+      "logo": "https://www3.homecine.to/favicon.ico"
     }
   ]
 }
