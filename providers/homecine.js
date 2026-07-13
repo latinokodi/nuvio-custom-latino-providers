@@ -141,10 +141,14 @@ async function getStreams(id, type, season, episode) {
         const results = await search(title);
         if (results && results.length > 0) {
             matchedPost = results.find(r => {
+                const isTv = r.url.includes('/series/');
+                if (type === 'tv' && !isTv) return false;
+                if (type === 'movie' && isTv) return false;
+
                 const rt = cleanTitle(r.title);
                 return info.titles.some(t => {
                     const ct = cleanTitle(t);
-                    return rt.includes(ct) || ct.includes(rt);
+                    return rt === ct || rt.includes(ct) || ct.includes(rt);
                 });
             });
             if (matchedPost) break;

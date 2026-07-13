@@ -144,10 +144,15 @@ async function getStreams(id, type, season, episode) {
         const results = await search(title);
         if (results && results.length > 0) {
             matchedPost = results.find(r => {
+                const isTv = r.url.includes('/serie/');
+                const isMovie = r.url.includes('/pelicula/');
+                if (type === 'tv' && !isTv) return false;
+                if (type === 'movie' && !isMovie) return false;
+                
                 const rt = cleanTitle(r.title);
                 return info.titles.some(t => {
                     const ct = cleanTitle(t);
-                    return rt.includes(ct) || ct.includes(rt);
+                    return rt === ct || rt.includes(ct) || ct.includes(rt);
                 });
             });
             if (matchedPost) break;
@@ -163,14 +168,7 @@ async function getStreams(id, type, season, episode) {
     console.log(`[SeriesMetro] Matched: "${matchedPost.title}" -> ${url}`);
 
     if (type === 'tv') {
-        // Balandro says series use AJAX to load episodes.
-        // Let's check how seasons/episodes are mapped
         const html = await fetch(url, { headers: HEADERS }).then(r => r.text());
-        // In seriesmetron.py:
-        // matches = scrapertools.find_multiple_matches(data, '<a data-post="(.*?)" data-season="(.*?)"')
-        // And then requests episodes via AJAX or just finds them...
-        // For simplicity, let's look for episode link in the current DOM
-        // Format: href=".../episodio/NAME-1x1/"
         const epRegex = new RegExp(`href="([^"]+-\\d+x\\d+\\/)?"[^>]*>[^<]*${season}x${episode}`, 'i');
         const epMatch = epRegex.exec(html) || new RegExp(`href="([^"]+episodio[^"]+${season}x${episode}[^"]*)"`, 'i').exec(html);
         
@@ -178,11 +176,23 @@ async function getStreams(id, type, season, episode) {
             url = epMatch[1];
             console.log(`[SeriesMetro] Found episode: ${url}`);
         } else {
-            // Might need AJAX, try simple construct if it follows standard pattern
-            // The url usually looks like /episodio/breaking-bad-1x1/
             const slug = url.split('/').filter(Boolean).pop();
-            url = `${BASE_URL}/episodio/${slug}-${season}x${episode}/`;
-            console.log(`[SeriesMetro] Guessing episode url: ${url}`);
+            const guessUrls = [
+                `${BASE_URL}/capitulo/${slug}-temporada-${season}-capitulo-${episode}/`,
+                `${BASE_URL}/episodio/${slug}-${season}x${episode}/`
+            ];
+            let foundUrl = null;
+            for (const gUrl of guessUrls) {
+                try {
+                    const r = await fetch(gUrl, { method: 'HEAD', headers: HEADERS });
+                    if (r.ok) {
+                        foundUrl = gUrl;
+                        break;
+                    }
+                } catch(e) {}
+            }
+            url = foundUrl || guessUrls[0];
+            console.log(`[SeriesMetro] Guessed episode url: ${url}`);
         }
     }
 

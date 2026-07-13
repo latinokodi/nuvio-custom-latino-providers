@@ -495,7 +495,10 @@ async function resolveCuevana(embedUrl) {
             playerUrls.push(m[1].replace(/#.*$/, '').replace(/&amp;/g, '&'));
         }
 
-        if (playerUrls.length === 0) return null;
+        if (playerUrls.length === 0) {
+            console.log(`[SeriesGato] Cuevana go_to_player not found, returning raw embed: ${embedUrl}`);
+            return { url: embedUrl, server: 'Cuevana', quality: 'HD', headers: { 'Referer': 'https://vip.seriesgato.pw/', 'User-Agent': USER_AGENT } };
+        }
         console.log(`[SeriesGato] Cuevana found ${playerUrls.length} embed URLs`);
 
         // Try to resolve with known resolvers, stop at first success
