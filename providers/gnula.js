@@ -53,20 +53,14 @@ async function searchGnula(query) {
         const url = `${BASE_URL}/?s=${encodeURIComponent(query)}`;
         const html = await fetch(url, { headers: HEADERS }).then(r => r.text());
         const matches = [];
-        const regex = /<article class="bs".*?<a href="([^"]+)".*?title="([^"]+)".*?<div class="typez([^"]*)">([\s\S]*?)<\/div>/gs;
+        // New theme (dramastream): search results use gnrd-card links
+        const regex = /<a[^>]*class="gnrd-card"[^>]*href="([^"]+)"[^>]*title="([^"]+)"/gi;
         let match;
         while ((match = regex.exec(html)) !== null) {
-            const classAttr = match[3] || "";
-            const content = match[4] || "";
-            const isMovie = classAttr.toLowerCase().includes("pelicula") || 
-                            content.toLowerCase().includes("pelicula") || 
-                            classAttr.toLowerCase().includes("película") || 
-                            content.toLowerCase().includes("película");
-            matches.push({
-                url: match[1],
-                title: match[2],
-                isMovie: isMovie
-            });
+            const href = match[1];
+            const title = match[2];
+            const isMovie = !href.includes('/serie/') && !href.includes('/series/') && !href.includes('/anime/');
+            matches.push({ url: href, title: title, isMovie: isMovie });
         }
         return matches;
     } catch (e) {
@@ -135,7 +129,7 @@ const MIRRORS = {
                  "callistanise", "vhaudm", "mdfury", "dintezuvio", "acek-cdn",
                  "vedonm", "vidhidepro", "vidhidevip", "masukestin", "filelions"],
     FILEMOON:   ["filemoon", "moonalu", "moonembed", "bysedikamoum", "r66nv9ed",
-                 "398fitus", "bysejikuar", "fmoon"],
+                 "398fitus", "bysejikuar", "bysevepoin", "fmoon"],
     VOE:        ["voe.sx", "voe-sx", "voex.sx", "marissashare", "cloudwindow",
                  "marissasharecareer"],
     DOODSTREAM:  ["doodstream", "dood.", "d000d", "d0000d", "doodapi", "d0o0d",
@@ -583,6 +577,9 @@ async function resolveEmbed(url) {
         if (res) return [{ name: "Gnula", title: `StreamTape`, url: res.url, quality: res.quality, headers: res.headers }];
     }
     const u = url.toLowerCase();
+    if (u.includes("ok.ru") || u.includes("okru")) {
+        return [{ name: "Gnula", title: `Ok.ru`, url: url, quality: "HD", headers: { "User-Agent": USER_AGENT, "Referer": "https://ww3.gnulahd.nu/" }}];
+    }
     if (u.includes("waaw.to") || u.includes("netu.tv")) {
         const res = await resolveWaaw(url);
         if (res) return [{ name: "Gnula", title: `Waaw`, url: res.url, quality: res.quality, headers: res.headers }];

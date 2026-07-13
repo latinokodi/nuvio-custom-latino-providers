@@ -1,8 +1,10 @@
 # Ignore everything by default
 /*
 
-# Whitelist manifest.json, README.md, the providers directory, and .gitignore
+# Whitelist required files for the provider repository
 !.gitignore
 !manifest.json
 !README.md
+!package.json
+!package-lock.json
 !providers/

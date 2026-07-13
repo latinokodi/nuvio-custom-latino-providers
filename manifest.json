@@ -136,21 +136,6 @@
       ]
     },
     {
-      "id": "veronline",
-      "name": "VerOnline",
-      "description": "Series en Latino, Español y VOSE desde VerOnline.",
-      "version": "1.0.0",
-      "author": "latinokodi",
-      "supportedTypes": [
-        "tv"
-      ],
-      "filename": "providers/veronline.js",
-      "enabled": true,
-      "contentLanguage": [
-        "es"
-      ]
-    },
-    {
       "id": "allpeliculasse",
       "name": "AllpeliculasSE",
       "description": "Películas y series en Latino, Castellano y VOSE desde Allpeliculas.",
@@ -365,22 +350,6 @@
       "contentLanguage": [
         "es"
       ]
-    },
-    {
-      "id": "mirandogratis",
-      "name": "MirandoGratis",
-      "description": "Películas en Latino, Castellano y VOSE desde MirandoGratis.",
-      "version": "1.0.0",
-      "author": "custom-latino",
-      "supportedTypes": [
-        "movie"
-      ],
-      "filename": "providers/mirandogratis.js",
-      "enabled": true,
-      "contentLanguage": [
-        "es"
-      ],
-      "logo": "https://mirandogratis.com/favicon.ico"
     },
     {
       "id": "seriesmetro",

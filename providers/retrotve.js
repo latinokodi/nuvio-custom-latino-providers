@@ -12,10 +12,12 @@ function b64urlDecode(s) {
     return Buffer.from(s, 'base64');
 }
 
+const axios = require('axios');
 const HEADERS = {
     "User-Agent": UA,
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
-    "Accept-Language": "es-ES,es;q=0.9,en;q=0.8"
+    "Accept-Language": "es-ES,es;q=0.9,en;q=0.8",
+    "Accept-Encoding": "gzip, deflate"
 };
 
 // ── New FileMoon Resolver (API + AES-256-GCM decryption) ──
@@ -37,7 +39,7 @@ async function resolveFilemoon(embedUrl) {
         if (!videoId) return null;
 
         const apiUrl = `https://filemoon.to/api/videos/${videoId}`;
-        const res = await fetch(apiUrl, {
+        const res = await localFetch(apiUrl, {
             headers: {
                 "User-Agent": UA,
                 "Accept": "application/json, text/plain, */*",
@@ -95,7 +97,7 @@ async function resolveFilemoon(embedUrl) {
 
 async function resolveOkRu(embedUrl) {
     try {
-        let e = await fetch(embedUrl, {
+        let e = await localFetch(embedUrl, {
             headers: { "User-Agent": UA, "Accept": "text/html", "Referer": "https://ok.ru/" },
             redirect: "follow"
         }).then((n) => n.text());
@@ -149,6 +151,15 @@ function cleanTitle(title) {
         .trim();
 }
 
+async function localFetch(url, options = {}) {
+    const headers = { ...options.headers };
+    if (!headers['Accept-Encoding']) headers['Accept-Encoding'] = 'gzip, deflate';
+    try {
+        const res = await axios({ method: options.method || 'GET', url, headers, data: options.body, validateStatus: () => true });
+        return { ok: res.status >= 200 && res.status < 300, status: res.status, text: async () => typeof res.data === 'string' ? res.data : JSON.stringify(res.data), json: async () => typeof res.data === 'string' ? JSON.parse(res.data) : res.data };
+    } catch(e) { throw e; }
+}
+
 async function getTmdbTitles(tmdbId, type) {
     let titleEsES = null;
     let titleEsMX = null;
@@ -157,7 +168,7 @@ async function getTmdbTitles(tmdbId, type) {
     let year = null;
     
     try {
-        const res = await fetch(`https://api.themoviedb.org/3/${type}/${tmdbId}?api_key=${TMDB_KEY}&language=es-ES`).then(r => r.json());
+        const res = await localFetch(`https://api.themoviedb.org/3/${type}/${tmdbId}?api_key=${TMDB_KEY}&language=es-ES`).then(r => r.json());
         titleEsES = type === "movie" ? res.title : res.name;
         titleOriginal = type === "movie" ? res.original_title : res.original_name;
         const dateStr = type === "movie" ? res.release_date : res.first_air_date;
@@ -169,14 +180,14 @@ async function getTmdbTitles(tmdbId, type) {
     }
     
     try {
-        const res = await fetch(`https://api.themoviedb.org/3/${type}/${tmdbId}?api_key=${TMDB_KEY}&language=es-MX`).then(r => r.json());
+        const res = await localFetch(`https://api.themoviedb.org/3/${type}/${tmdbId}?api_key=${TMDB_KEY}&language=es-MX`).then(r => r.json());
         titleEsMX = type === "movie" ? res.title : res.name;
     } catch (e) {
         console.error("[Colección 2] TMDB es-MX error:", e.message);
     }
     
     try {
-        const res = await fetch(`https://api.themoviedb.org/3/${type}/${tmdbId}?api_key=${TMDB_KEY}&language=en-US`).then(r => r.json());
+        const res = await localFetch(`https://api.themoviedb.org/3/${type}/${tmdbId}?api_key=${TMDB_KEY}&language=en-US`).then(r => r.json());
         titleEn = type === "movie" ? res.title : res.name;
     } catch (e) {
         console.error("[Colección 2] TMDB en-US error:", e.message);
@@ -215,7 +226,7 @@ function parseSearchPage($, baseUrl) {
 async function searchOnSite(query) {
     try {
         const url = `${BASE_URL}/?s=${encodeURIComponent(query)}`;
-        const res = await fetch(url, { headers: HEADERS });
+        const res = await localFetch(url, { headers: HEADERS });
         if (!res.ok) return [];
         const html = await res.text();
         const $ = cheerio.load(html);
@@ -233,7 +244,7 @@ function cleanQueryString(q) {
 async function extractVideoLinks(pageUrl) {
     const streams = [];
     try {
-        const res = await fetch(pageUrl, { headers: HEADERS });
+        const res = await localFetch(pageUrl, { headers: HEADERS });
         if (!res.ok) return [];
         const html = await res.text();
         const $ = cheerio.load(html);
@@ -264,7 +275,7 @@ async function extractVideoLinks(pageUrl) {
         // 3. Resolve trembed URLs
         for (const embedUrl of trembedUrls) {
             try {
-                const embedRes = await fetch(embedUrl, { headers: HEADERS });
+                const embedRes = await localFetch(embedUrl, { headers: HEADERS });
                 if (!embedRes.ok) continue;
                 const embedHtml = await embedRes.text();
                 const $embed = cheerio.load(embedHtml);
@@ -372,7 +383,7 @@ async function getStreams(tmdbId, mediaType, season, episode) {
                 }
             }
 
-            if (score > bestScore && score >= 40) {
+            if (score > bestScore && score >= 30) {
                 bestScore = score;
                 matchedContent = res;
             }
@@ -393,7 +404,7 @@ async function getStreams(tmdbId, mediaType, season, episode) {
     } else {
         let seriesHtml = "";
         try {
-            seriesHtml = await fetch(matchedContent.id, { headers: HEADERS }).then(r => r.text());
+            seriesHtml = await localFetch(matchedContent.id, { headers: HEADERS }).then(r => r.text());
         } catch (e) {
             console.error("[Colección 2] Failed to load series page:", e.message);
             return [];

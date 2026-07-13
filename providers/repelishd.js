@@ -74,7 +74,6 @@ async function getStreams(id, type, season, episode) {
             const links = [...content.matchAll(/data-link="([^"]+)"/g)];
             for (const link of links) {
                 let streamUrl = link[1];
-                if (streamUrl.includes("verhdlink")) continue;
                 if (!streamUrl.startsWith("http")) streamUrl = "https:" + streamUrl;
 
                 streams.push({

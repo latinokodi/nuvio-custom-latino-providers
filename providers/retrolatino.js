@@ -11,6 +11,43 @@ const HEADERS = {
     "Connection": "close"
 };
 
+const axios = require("axios");
+
+let sessionCookie = null;
+async function localFetch(url, options = {}) {
+    if (!sessionCookie && url.includes(BASE_URL)) {
+        try {
+            const r = await axios.get(BASE_URL, { headers: { "User-Agent": UA } });
+            const cookies = r.headers["set-cookie"] || [];
+            sessionCookie = cookies.map(c => c.split(";")[0]).join("; ");
+        } catch(e) {}
+    }
+    
+    const headers = { ...options.headers };
+    if (!headers["Accept-Encoding"]) headers["Accept-Encoding"] = "gzip, deflate";
+    if (sessionCookie && url.includes(BASE_URL)) {
+        headers["Cookie"] = sessionCookie;
+    }
+    
+    try {
+        const res = await axios({
+            method: options.method || "GET",
+            url,
+            headers,
+            data: options.body,
+            validateStatus: () => true
+        });
+        return {
+            ok: res.status >= 200 && res.status < 300,
+            status: res.status,
+            text: async () => typeof res.data === "string" ? res.data : JSON.stringify(res.data),
+            json: async () => typeof res.data === "string" ? JSON.parse(res.data) : res.data
+        };
+    } catch(e) {
+        throw e;
+    }
+}
+
 // Packer Unpacker Helper for resolvers
 function unpackPacker(e) {
     try {
@@ -35,7 +72,7 @@ function unpackPacker(e) {
 
 async function resolveOkRu(embedUrl) {
     try {
-        let e = await fetch(embedUrl, {
+        let e = await localFetch(embedUrl, {
             headers: { "User-Agent": UA, "Accept": "text/html", "Referer": "https://ok.ru/" },
             redirect: "follow"
         }).then((n) => n.text());
@@ -70,7 +107,7 @@ async function resolveOkRu(embedUrl) {
 
 async function resolveFilemoon(embedUrl) {
     try {
-        let res = await fetch(embedUrl, { headers: { "User-Agent": UA, Referer: BASE_URL } });
+        let res = await localFetch(embedUrl, { headers: { "User-Agent": UA, Referer: BASE_URL } });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         let text = await res.text();
         let evalMatch = text.match(/eval\(function\(p,a,c,k,e,[rd]\)[\s\S]*?\.split\('\|'\)[^\)]*\)\)/);
@@ -120,7 +157,7 @@ async function getTmdbTitles(tmdbId, type) {
     let year = null;
     
     try {
-        const res = await fetch(`https://api.themoviedb.org/3/${type}/${tmdbId}?api_key=${TMDB_KEY}&language=es-ES`).then(r => r.json());
+        const res = await localFetch(`https://api.themoviedb.org/3/${type}/${tmdbId}?api_key=${TMDB_KEY}&language=es-ES`).then(r => r.json());
         titleEsES = type === "movie" ? res.title : res.name;
         titleOriginal = type === "movie" ? res.original_title : res.original_name;
         const dateStr = type === "movie" ? res.release_date : res.first_air_date;
@@ -132,14 +169,14 @@ async function getTmdbTitles(tmdbId, type) {
     }
     
     try {
-        const res = await fetch(`https://api.themoviedb.org/3/${type}/${tmdbId}?api_key=${TMDB_KEY}&language=es-MX`).then(r => r.json());
+        const res = await localFetch(`https://api.themoviedb.org/3/${type}/${tmdbId}?api_key=${TMDB_KEY}&language=es-MX`).then(r => r.json());
         titleEsMX = type === "movie" ? res.title : res.name;
     } catch (e) {
         console.error("[Retro Latino] TMDB es-MX error:", e.message);
     }
     
     try {
-        const res = await fetch(`https://api.themoviedb.org/3/${type}/${tmdbId}?api_key=${TMDB_KEY}&language=en-US`).then(r => r.json());
+        const res = await localFetch(`https://api.themoviedb.org/3/${type}/${tmdbId}?api_key=${TMDB_KEY}&language=en-US`).then(r => r.json());
         titleEn = type === "movie" ? res.title : res.name;
     } catch (e) {
         console.error("[Retro Latino] TMDB en-US error:", e.message);
@@ -187,7 +224,7 @@ function parseSearchPage($, baseUrl) {
 async function searchOnSite(query, type) {
     try {
         const url = `${BASE_URL}/busqueda.php?p=${encodeURIComponent(query)}&s=${type}`;
-        const res = await fetch(url, { headers: HEADERS });
+        const res = await localFetch(url, { headers: HEADERS });
         if (!res.ok) return [];
         const html = await res.text();
         const $ = cheerio.load(html);
@@ -278,7 +315,7 @@ async function getStreams(tmdbId, mediaType, season, episode) {
         for (let idx = 0; idx < 3; idx++) {
             try {
                 const payload = new URLSearchParams({ p: slug, r: String(idx) }).toString();
-                const res = await fetch(`${BASE_URL}/serv.php`, {
+                const res = await localFetch(`${BASE_URL}/serv.php`, {
                     method: "POST",
                     headers: { ...HEADERS, "Content-Type": "application/x-www-form-urlencoded" },
                     body: payload
@@ -318,7 +355,7 @@ async function getStreams(tmdbId, mediaType, season, episode) {
         const seriesUrl = matchedContent.id;
         let seriesHtml = "";
         try {
-            seriesHtml = await fetch(seriesUrl, { headers: HEADERS }).then(r => r.text());
+            seriesHtml = await localFetch(seriesUrl, { headers: HEADERS }).then(r => r.text());
         } catch (e) {
             console.error("[Retro Latino] Failed to load series page:", e.message);
             return [];
@@ -379,7 +416,7 @@ async function getStreams(tmdbId, mediaType, season, episode) {
 
         let episodesText = "";
         try {
-            episodesText = await fetch(vcapUrl, {
+            episodesText = await localFetch(vcapUrl, {
                 method: "POST",
                 headers: { ...HEADERS, "Content-Type": "application/x-www-form-urlencoded" },
                 body: payload
@@ -441,7 +478,7 @@ async function getStreams(tmdbId, mediaType, season, episode) {
         for (let idx = 0; idx < 3; idx++) {
             try {
                 servPayload.set("r", String(idx));
-                const res = await fetch(servUrl, {
+                const res = await localFetch(servUrl, {
                     method: "POST",
                     headers: { ...HEADERS, "Content-Type": "application/x-www-form-urlencoded" },
                     body: servPayload.toString()
