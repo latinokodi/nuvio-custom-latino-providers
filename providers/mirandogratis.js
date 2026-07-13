@@ -68,6 +68,23 @@ async function search(query) {
     }
 }
 
+async function resolveWaaw(embedUrl) {
+    try {
+        const eUrl = embedUrl.replace(/\/f\//, "/e/");
+        const res = await fetch(eUrl, {
+            headers: { "User-Agent": HEADERS["User-Agent"], "Referer": BASE_URL + "/" }
+        });
+        if (!res.ok) return null;
+        const html = await res.text();
+        const m3 = html.match(/https?:\/\/[^\s"'<>\\]+\.m3u8[^\s"'<>\\]*/i);
+        if (m3) return m3[0];
+        const file = html.match(/file\s*:\s*["']([^"']+)["']/i);
+        if (file) return file[1];
+    } catch (e) {
+    }
+    return null;
+}
+
 async function extractStreams(pageUrl) {
     try {
         const html = await fetch(pageUrl, { headers: HEADERS }).then(r => r.text());
@@ -88,6 +105,20 @@ async function extractStreams(pageUrl) {
             else if (html.includes('<strong>Audio</strong>: Castellano')) audio = 'Esp';
             else if (html.includes('<strong>Audio</strong>: Subtitulado')) audio = 'Vose';
             
+            if (serverName === "Waaw") {
+                const direct = await resolveWaaw(embedUrl);
+                if (direct) {
+                    streams.push({
+                        name: "MirandoGratis",
+                        title: `Waaw (${audio})`,
+                        url: direct,
+                        quality: '720p',
+                        headers: { 'Referer': embedUrl, 'User-Agent': HEADERS["User-Agent"] }
+                    });
+                    continue;
+                }
+            }
+
             streams.push({
                 name: "MirandoGratis",
                 title: `${serverName} (${audio})`,
