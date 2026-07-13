@@ -496,7 +496,9 @@ async function resolveCuevana(embedUrl) {
         }
 
         if (playerUrls.length === 0) {
-            console.log(`[SeriesGato] Cuevana go_to_player not found, returning raw embed: ${embedUrl}`);
+            console.log(`[SeriesGato] Cuevana go_to_player not found, falling back to resolveWaaw: ${embedUrl}`);
+            const w = await resolveWaaw(embedUrl);
+            if (w) return w;
             return { url: embedUrl, server: 'Cuevana', quality: 'HD', headers: { 'Referer': 'https://vip.seriesgato.pw/', 'User-Agent': USER_AGENT } };
         }
         console.log(`[SeriesGato] Cuevana found ${playerUrls.length} embed URLs`);

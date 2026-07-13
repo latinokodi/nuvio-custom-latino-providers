@@ -68,6 +68,47 @@ async function search(query) {
     }
 }
 
+function unpackEval(payload, radix, symtab) {
+    const chars = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const unbase = (str) => {
+        let result = 0;
+        for (let i = 0; i < str.length; i++) {
+            const pos = chars.indexOf(str[i]);
+            if (pos === -1) return NaN;
+            result = result * radix + pos;
+        }
+        return result;
+    };
+    return payload.replace(/\b([0-9a-zA-Z]+)\b/g, (match) => {
+        const idx = unbase(match);
+        if (isNaN(idx) || idx >= symtab.length) return match;
+        return symtab[idx] && symtab[idx] !== "" ? symtab[idx] : match;
+    });
+}
+
+function evalUnpack(script) {
+    try {
+        const m = script.match(/eval\(function\(p,a,c,k,e,[a-z]\)\{[\s\S]*?\}\s*\('([\s\S]+?)',\s*(\d+),\s*(\d+),\s*'([\s\S]+?)'\.split\('\|'\)/);
+        if (!m) return null;
+        return unpackEval(m[1], parseInt(m[2]), m[4].split("|"));
+    } catch { return null; }
+}
+
+async function resolveFastream(url) {
+    try {
+        const html = await fetch(url, { headers: { ...HEADERS, "Referer": BASE_URL } }).then(r => r.text());
+        const scriptMatch = html.match(/eval\(function[\s\S]+?split\('\|'\).*?\)/);
+        if (scriptMatch) {
+            const unpacked = evalUnpack(scriptMatch[0]);
+            if (unpacked) {
+                const m3u8Match = unpacked.match(/https?:\/\/[^\s"'<>\\]+\.m3u8[^\s"'<>\\]*/i);
+                if (m3u8Match) return m3u8Match[0];
+            }
+        }
+    } catch (e) {}
+    return null;
+}
+
 async function extractStreams(pageUrl) {
     try {
         const html = await fetch(pageUrl, { headers: HEADERS }).then(r => r.text());
@@ -99,6 +140,19 @@ async function extractStreams(pageUrl) {
                 else if (l.includes('castellano') || l.includes('español')) lang = 'Esp';
                 else if (l.includes('sub')) lang = 'Vose';
                 
+                if (embedUrl.includes('fastream.to')) {
+                    const direct = await resolveFastream(embedUrl);
+                    if (direct) {
+                        streams.push({
+                            name: "HomeCine",
+                            title: `Fastream (${lang})`,
+                            url: direct,
+                            quality: 'HD'
+                        });
+                        continue;
+                    }
+                }
+                
                 streams.push({
                     name: "HomeCine",
                     title: `Fastream (${lang})`,
@@ -115,6 +169,20 @@ async function extractStreams(pageUrl) {
             while ((iframeMatch = iframeRe.exec(html)) !== null) {
                 const embedUrl = iframeMatch[1];
                 if (embedUrl.includes('youtube')) continue;
+                
+                if (embedUrl.includes('fastream.to')) {
+                    const direct = await resolveFastream(embedUrl);
+                    if (direct) {
+                        streams.push({
+                            name: "HomeCine",
+                            title: "Fastream (HD)",
+                            url: direct,
+                            quality: 'HD'
+                        });
+                        continue;
+                    }
+                }
+                
                 streams.push({
                     name: "HomeCine",
                     title: "Fastream (HD)",
