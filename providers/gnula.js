@@ -650,21 +650,20 @@ async function getStreams(id, type, season, episode) {
     }
 
     let target = results.find(r => {
-        const isTypeMatch = (type === "movie" && r.isMovie) || (type === "tv" && !r.isMovie);
-        if (!isTypeMatch) return false;
-        
         const cleanSearch = cleanTitle(r.title).toLowerCase();
         const cleanT = cleanTitle(info.title).toLowerCase();
         const cleanO = cleanTitle(info.originalTitle).toLowerCase();
-        
-        return cleanSearch.includes(cleanT) || cleanT.includes(cleanSearch) ||
-               cleanSearch.includes(cleanO) || cleanO.includes(cleanSearch);
+        return cleanSearch === cleanT || cleanSearch === cleanO;
     });
 
     if (!target) {
-        target = results.find(r => 
-            (type === "movie" && r.isMovie) || (type === "tv" && !r.isMovie)
-        );
+        target = results.find(r => {
+            const cleanSearch = cleanTitle(r.title).toLowerCase();
+            const cleanT = cleanTitle(info.title).toLowerCase();
+            const cleanO = cleanTitle(info.originalTitle).toLowerCase();
+            return cleanSearch.includes(cleanT) || cleanT.includes(cleanSearch) ||
+                   cleanSearch.includes(cleanO) || cleanO.includes(cleanSearch);
+        });
     }
 
     if (!target) return [];
@@ -676,18 +675,31 @@ async function getStreams(id, type, season, episode) {
         const cheerio = require("cheerio");
         const $ = cheerio.load(episodesHtml);
         let epUrl = null;
-        $(".eplister a, .epcheck a, .gnpv-eplist a").each((i, el) => {
-            const numText = $(el).find(".epl-num").text().trim();
-            const match = numText.match(/^0*(\d+)x0*(\d+)$/i);
-            if (match) {
-                const s = parseInt(match[1]);
-                const e = parseInt(match[2]);
-                if (s === season && e === episode) {
-                    epUrl = $(el).attr("href");
-                    return false;
-                }
+        
+        $(".gnrd-epc").each((i, el) => {
+            const s = parseInt($(el).attr("data-s"));
+            const e = parseInt($(el).attr("data-e"));
+            if (s === season && e === episode) {
+                epUrl = $(el).attr("href");
+                return false;
             }
         });
+
+        if (!epUrl) {
+            $(".eplister a, .epcheck a, .gnpv-eplist a").each((i, el) => {
+                const numText = $(el).find(".epl-num").text().trim();
+                const match = numText.match(/^0*(\d+)x0*(\d+)$/i);
+                if (match) {
+                    const s = parseInt(match[1]);
+                    const e = parseInt(match[2]);
+                    if (s === season && e === episode) {
+                        epUrl = $(el).attr("href");
+                        return false;
+                    }
+                }
+            });
+        }
+        
         if (!epUrl) return [];
         url = epUrl;
     }
